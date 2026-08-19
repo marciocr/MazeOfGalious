@@ -42,29 +42,10 @@ set(SHARED_SOURCES
 	sources/tiles.h
 )
 
-set(MAC_SOURCES
-	"build/osx/Maze of Galious/SDLMain.h"
-	"build/osx/Maze of Galious/SDLMain.m"
-)
-
 set(SHARED_LIBS
 )
 
-if (APPLE)
-	set(CMAKE_OSX_DEPLOYMENT_TARGET ${MACOSX_DEPLOYMENT_TARGET})
-	if (MACOSX_DEPLOYMENT_TARGET)
-		set(CMAKE_OSX_SYSROOT "/Library/Developer/CommandLineTools/SDKs/MacOSX${MACOSX_DEPLOYMENT_TARGET}.sdk")
-	else()
-		set(CMAKE_OSX_SYSROOT "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")
-	endif()
-	set(CMAKE_CXX_FLAGS "--sysroot \"${CMAKE_OSX_SYSROOT}\" ${CMAKE_CXX_FLAGS}")
-endif()
-
 find_package(SDL REQUIRED)
-if(SDL_VERSION_PATCH GREATER_EQUAL 50)
-	set(USE_SDL12_COMPAT 1)
-	find_package(SDL2 REQUIRED)
-endif()
 find_package(SDL_image REQUIRED)
 find_package(SDL_mixer REQUIRED)
 find_package(SDL_sound REQUIRED)
@@ -95,58 +76,8 @@ if (SDL_SOUND_FOUND)
 	set(SHARED_LIBS ${SHARED_LIBS} ${SDL_SOUND_LIBRARIES})
 endif()
 
-if (APPLE)
-	source_group("macos" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/build/osx/Maze of Galious/SDLMain.+")
-	set(MoGIcon "${CMAKE_CURRENT_SOURCE_DIR}/build/osx/Maze of Galious.icns")
-	set_source_files_properties(${MoGIcon} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-	file(GLOB_RECURSE GRAPHICS_RES "${CMAKE_CURRENT_SOURCE_DIR}/graphics/*")
-	file(GLOB_RECURSE ROOMS_RES "${CMAKE_CURRENT_SOURCE_DIR}/rooms/*")
-	file(GLOB_RECURSE SOUND_RES "${CMAKE_CURRENT_SOURCE_DIR}/sound/*")
-	if(USE_SDL12_COMPAT)
-		add_executable(MazeOfGalious MACOSX_BUNDLE ${MoGIcon} ${SHARED_SOURCES} "${MAC_SOURCES}" "${GRAPHICS_RES}" "${ROOMS_RES}" "${SOUND_RES}" "${SDL2_SDL12_COMPAT_SHARED_LIBRARY_PATH}")
-	else()
-		add_executable(MazeOfGalious MACOSX_BUNDLE ${MoGIcon} ${SHARED_SOURCES} "${MAC_SOURCES}" "${GRAPHICS_RES}" "${ROOMS_RES}" "${SOUND_RES}")
-	endif()
-
-	foreach(GRAPHICS_RES_FILE ${GRAPHICS_RES})
-		file(RELATIVE_PATH GRAPHICS_RES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/graphics" ${GRAPHICS_RES_FILE})
-		string(REGEX REPLACE "/[^/]*$" "" GRAPHICS_RES_PATH_STRIPPED ${GRAPHICS_RES_PATH})
-		set_property(SOURCE ${GRAPHICS_RES_FILE} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/graphics/${GRAPHICS_RES_PATH_STRIPPED}")
-	endforeach(GRAPHICS_RES_FILE)
-
-	foreach(ROOMS_RES_FILE ${ROOMS_RES})
-		set_property(SOURCE ${ROOMS_RES_FILE} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/rooms")
-	endforeach(ROOMS_RES_FILE)
-
-	foreach(SOUND_RES_FILE ${SOUND_RES})
-		file(RELATIVE_PATH SOUND_RES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/sound" ${SOUND_RES_FILE})
-		string(REGEX REPLACE "/[^/]*$" "" SOUND_RES_PATH_STRIPPED ${SOUND_RES_PATH})
-		set_property(SOURCE ${SOUND_RES_FILE} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/sound/${SOUND_RES_PATH_STRIPPED}")
-	endforeach(SOUND_RES_FILE)
-
-	if(USE_SDL12_COMPAT)
-		set_property(SOURCE ${SDL2_SDL12_COMPAT_SHARED_LIBRARY_PATH} PROPERTY MACOSX_PACKAGE_LOCATION "libs")
-	endif()
-
-	set_target_properties(MazeOfGalious PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Maze of Galious")
-	set_target_properties(MazeOfGalious PROPERTIES MACOSX_BUNDLE_EXECUTABLE_NAME "${MACOSX_BUNDLE_BUNDLE_NAME}")
-	set_target_properties(MazeOfGalious PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/build/osx/Info.plist.in")
-	set_target_properties(MazeOfGalious PROPERTIES MACOSX_BUNDLE_ICON_FILE "Maze of Galious.icns")
-	set_target_properties(MazeOfGalious PROPERTIES MACOSX_BUNDLE_GUI_IDENTIFIER "com.braingames.MazeofGalious")
-	set_target_properties(MazeOfGalious PROPERTIES MACOSX_BUNDLE_SHORT_VERSION_STRING "${MOG_VERSION}")
-	set_target_properties(MazeOfGalious PROPERTIES MACOSX_BUNDLE_BUNDLE_VERSION "${MACOSX_BUNDLE_BUNDLE_NAME} ${MOG_VERSION}")
-	set_target_properties(MazeOfGalious PROPERTIES OUTPUT_NAME "Maze of Galious")
-	if(EXISTS "/usr/local/bin/dylibbundler")
-		add_custom_command(TARGET MazeOfGalious POST_BUILD COMMAND /bin/zsh -c "/usr/local/bin/dylibbundler -od -b -x \"${CMAKE_CURRENT_SOURCE_DIR}/Maze of Galious.app/Contents/MacOS/Maze of Galious\" -d \"${CMAKE_CURRENT_SOURCE_DIR}/Maze of Galious.app/Contents/libs\"")
-	elseif(EXISTS "/opt/homebrew/bin/dylibbundler")
-		add_custom_command(TARGET MazeOfGalious POST_BUILD COMMAND /bin/zsh -c "/opt/homebrew/bin/dylibbundler -od -b -x \"${CMAKE_CURRENT_SOURCE_DIR}/Maze of Galious.app/Contents/MacOS/Maze of Galious\" -d \"${CMAKE_CURRENT_SOURCE_DIR}/Maze of Galious.app/Contents/libs\"")
-	else()
-		message(FATAL_ERROR "Unable to find dylibbundler")
-	endif()
-
-else()
-	add_executable(MazeOfGalious WIN32 ${SHARED_SOURCES})
-endif()
+add_executable(MazeOfGalious ${SHARED_SOURCES})
+target_compile_definitions(MazeOfGalious PRIVATE MOG_VERSION_STRING="Maze of Galious v${MOG_VERSION}")
 
 target_link_libraries(MazeOfGalious ${SHARED_LIBS})
 

@@ -1,10 +1,5 @@
-#ifdef _WIN32
-#include <windows.h>
-#include <windowsx.h>
-#else
 #include <sys/time.h>
 #include <time.h>
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +16,10 @@
 #include "debug.h"
 
 extern void DebugReport(void);
+
+#ifndef MOG_VERSION_STRING
+#define MOG_VERSION_STRING "Maze of Galious"
+#endif
 
 int SCREEN_X = 640;
 int SCREEN_Y = 400;
@@ -68,14 +67,8 @@ void Render(SDL_Surface *surface);
 SDL_Surface* initializeSDL(int flags);
 void finalizeSDL();
 
-#ifdef _WIN32
-int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                    LPSTR lpCmdLine, int nCmdShow)
-{
-#else
 int main(int argc, char** argv)
 {
-#endif
 
 	int time, act_time;
 	SDL_Event event;
@@ -97,85 +90,24 @@ int main(int argc, char** argv)
 		while(SDL_PollEvent(&event)) {
             switch(event.type) {
 			
-                // grab keyboard events 
+                // grab keyboard events
                 case SDL_KEYDOWN:
-#ifdef __APPLE__
-                    // different quit shortcut on OSX: apple+Q
-                    if (event.key.keysym.sym == SDLK_q) {
-                        SDLMod modifiers;
-                        modifiers = SDL_GetModState();
-                        if ((modifiers&KMOD_META) != 0) {
-                            quit = true;
-                        }
-                    }
-#endif
-#ifdef _WIN32
-                    // different quit shortcut on WIN32: ALT+F4
-                    if (event.key.keysym.sym == SDLK_F4) {
-                        SDLMod modifiers;
-                        modifiers = SDL_GetModState();
-                        if ((modifiers&KMOD_ALT) != 0) {
-                            quit = true;
-                        }
-                    }
-#endif
                     // default quit: F12
                     if (event.key.keysym.sym == SDLK_F12) {
                         quit = true;
                     } /* if */
 										
 
-/*
-FIXME: the code below is a big copy/paste; it should be in a separate function in stead
-*/
-
-#ifdef __APPLE__
-                    if (event.key.keysym.sym == SDLK_f) {
-                        SDLMod modifiers;
-                        modifiers = SDL_GetModState();
-                        if ((modifiers&KMOD_META) != 0) {
-							fullscreen = (fullscreen ? false : true);
-							SDL_QuitSubSystem(SDL_INIT_VIDEO);
-							SDL_InitSubSystem(SDL_INIT_VIDEO);
-							
-							if (SDL_WasInit(SDL_INIT_VIDEO)) {
-								screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, SDL_HWPALETTE|(fullscreen ? SDL_FULLSCREEN : 0));
-								
-								if (screen == NULL) {
-									output_debug_message("Couldn't set %ix%ix%i", SCREEN_X, SCREEN_Y, COLOUR_DEPTH);
-									if (fullscreen) {
-										output_debug_message( ",fullscreen,");
-									}
-									output_debug_message(" video mode: %s\n", SDL_GetError ());
-									quit = true;
-								} else {
-									output_debug_message( "Set the video resolution to: %ix%ix%i",
-										SDL_GetVideoSurface()->w, SDL_GetVideoSurface()->h,
-										SDL_GetVideoSurface()->format->BitsPerPixel);
-									if (fullscreen) {
-										output_debug_message( ",fullscreen");
-									}
-									output_debug_message("\n");
-								}
-												
-								SDL_WM_SetCaption("Maze of Galious v0.63", 0);
-								get_palette();
-							} else {
-								quit = true;
-							}
-                        } // if
-                    } // if
-#else
                     if (event.key.keysym.sym == SDLK_RETURN)
                     {
 						if (IsAltPressed2()) {
 							fullscreen = (fullscreen ? false : true);
 							SDL_QuitSubSystem(SDL_INIT_VIDEO);
 							SDL_InitSubSystem(SDL_INIT_VIDEO);
-							
+
 							if (SDL_WasInit(SDL_INIT_VIDEO)) {
 								screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, SDL_HWPALETTE|(fullscreen ? SDL_FULLSCREEN : 0));
-								
+
 								if (screen == NULL) {
 									output_debug_message( "Couldn't set %ix%ix%i", SCREEN_X, SCREEN_Y, COLOUR_DEPTH);
 									if (fullscreen) {
@@ -192,15 +124,14 @@ FIXME: the code below is a big copy/paste; it should be in a separate function i
 									}
 									output_debug_message("\n");
 								}
-												
-								SDL_WM_SetCaption("Maze of Galious v0.63", 0);
+
+								SDL_WM_SetCaption(MOG_VERSION_STRING, 0);
 								get_palette();
 							} else {
 								quit = true;
 							}
                         }
                     }
-#endif
 				
 					// Change graphic set with either F10 or 9 (F10 is already used in OSX)
 					if (event.key.keysym.sym == SDLK_F10 || event.key.keysym.sym == SDLK_9) {
@@ -321,7 +252,7 @@ SDL_Surface* initializeSDL(int moreflags)
 
 
 	atexit(SDL_Quit);
-	SDL_WM_SetCaption("Maze of Galious v0.63", 0);
+	SDL_WM_SetCaption(MOG_VERSION_STRING, 0);
 	
 	if (fullscreen) {
 		SDL_ShowCursor(SDL_DISABLE);
