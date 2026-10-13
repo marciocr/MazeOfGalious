@@ -5,3 +5,9 @@ Makefile
 Brewfile.lock.json
 cmake_install.cmake
 Maze of Galious.app
+build-*/
+.flatpak-builder/
+build-dir/
+repo/
+*.flatpak
+*.AppImage

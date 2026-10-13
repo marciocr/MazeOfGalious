@@ -8,6 +8,11 @@
 
 #define NAME_MAX	256
 
+static int compare_paths(const void *a,const void *b)
+{
+	return strcmp(*(char * const *)a,*(char * const *)b);
+} /* compare_paths */ 
+
 /* Paths: */ 
 
 extern char **g_paths;
@@ -71,6 +76,7 @@ void init_paths(void) {
 	    fprintf(stderr,"ERROR: No directories for graphics found in graphics/* \n");
 	    exit(1);
 	  }
+	  qsort(g_paths,n_g_paths,sizeof(char *),compare_paths);
   } /* if */ 
 
 
@@ -121,6 +127,8 @@ void init_paths(void) {
 	    fprintf(stderr,"ERROR: No directories for sound found in sound/* \n");
 	    exit(1);
 	  }
+	  /* readdir() order is arbitrary: sort so F10/F11 cycle in a fixed order. */ 
+	  qsort(s_paths,n_s_paths,sizeof(char *),compare_paths);
   } /* if */ 
 
 } /* init_paths */

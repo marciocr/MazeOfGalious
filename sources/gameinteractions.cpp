@@ -1,8 +1,8 @@
 #include "math.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "SDL.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include "keyboardstate.h"
 #include "sound.h"
 #include "MOGtypes.h"
 
@@ -38,7 +38,7 @@ extern int pers_walk_state;	/* Variable que controla el caminar.	*/
 extern int jump_inertia;
 extern bool sword;				/* Hay que dibujar la espada?	*/ 
 extern bool old_sword;
-extern unsigned char old_keyboard[SDLK_LAST];
+extern unsigned char old_keyboard[KEYBOARD_SIZE];
 extern int sword_x,sword_y;	/* Coordenadas de la espada.	*/ 
 extern int sword_time;
 extern int in_ladder;			/* En qué escalera está el personaje	*/ 
@@ -162,8 +162,8 @@ extern int zoom;
 
 
 /* Teclas: */ 
-extern SDLKey UP_KEY,DOWN_KEY,LEFT_KEY,RIGHT_KEY;
-extern SDLKey SWORD_KEY,WEAPON_KEY,ITEM_KEY,PAUSE_KEY;
+extern SDL_Scancode UP_KEY,DOWN_KEY,LEFT_KEY,RIGHT_KEY;
+extern SDL_Scancode SWORD_KEY,WEAPON_KEY,ITEM_KEY,PAUSE_KEY;
 
 void ActualizeLevers(int dx,int dy)
 {
@@ -253,7 +253,7 @@ void GameTestInteractions(int dx,int dy)
 	for(i=0;i<MAX_OBJECTS;i++) todelete[i]=false;
 
 	SDL_PumpEvents();
-	keyboard = (unsigned char *)SDL_GetKeyState(NULL);
+	keyboard = keyboard_get_state();
 
 	if (sword && !old_sword) hit=true;
 	old_sword=sword; 
@@ -2173,7 +2173,7 @@ void GameRoomEvents()
 	unsigned char *keyboard;
 
 	SDL_PumpEvents();
-	keyboard = (unsigned char *)SDL_GetKeyState(NULL);
+	keyboard = keyboard_get_state();
 
 	if (room_slimes) {
 		/* ORUGAS: */ 

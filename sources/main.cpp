@@ -1,11 +1,9 @@
-#include <sys/time.h>
-#include <time.h>
-
 #include <stdio.h>
 #include <stdlib.h>
-#include "SDL.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include "keyboardstate.h"
 #include "sound.h"
+#include "video.h"
 
 #include "bitmaps.h"
 #include "sprites.h"
@@ -24,10 +22,11 @@ extern void DebugReport(void);
 int SCREEN_X = 640;
 int SCREEN_Y = 400;
 int COLOUR_DEPTH = 8;
+int window_scale = 2;
 
 #define TRANSPARANT_COLOR (0)
 
-bool fullscreen = true;
+bool fullscreen = false;
 
 // Redrawing constant
 int REDRAWING_PERIOD = 40;
@@ -51,20 +50,12 @@ extern int music_volume, sfx_volume;
 extern int fighting_demon;
 
 
-void pause(unsigned int time)
-{
-	unsigned int initt = SDL_GetTicks();
-
-	while((SDL_GetTicks() - initt) < time);
-} 
-
-
 /* Pantalla: */ 
 
 SDL_Surface *screen;
 
 void Render(SDL_Surface *surface);
-SDL_Surface* initializeSDL(int flags);
+SDL_Surface* initializeSDL(void);
 void finalizeSDL();
 
 int main(int argc, char** argv)
@@ -73,8 +64,9 @@ int main(int argc, char** argv)
 	int time, act_time;
 	SDL_Event event;
     bool quit = false;
+	bool redraw;
 
-	screen = initializeSDL((fullscreen ? SDL_FULLSCREEN : 0));
+	screen = initializeSDL();
 
 	if (screen == 0) {
 		return 0;
@@ -84,57 +76,31 @@ int main(int argc, char** argv)
 
 	GameInit(SCREEN_X, SCREEN_Y);
 
-	SDL_FillRect(screen, NULL, 0);
+	SDL_FillSurfaceRect(screen, NULL, 0);
 	while (!quit) {
 	
 		while(SDL_PollEvent(&event)) {
+			keyboard_event(&event);
+
             switch(event.type) {
 			
                 // grab keyboard events
-                case SDL_KEYDOWN:
+                case SDL_EVENT_KEY_DOWN:
+					if (event.key.repeat) break;
+
                     // default quit: F12
-                    if (event.key.keysym.sym == SDLK_F12) {
+                    if (event.key.scancode == SDL_SCANCODE_F12) {
                         quit = true;
-                    } /* if */
+                    } /* if */ 
 										
 
-                    if (event.key.keysym.sym == SDLK_RETURN)
-                    {
-						if (IsAltPressed2()) {
-							fullscreen = (fullscreen ? false : true);
-							SDL_QuitSubSystem(SDL_INIT_VIDEO);
-							SDL_InitSubSystem(SDL_INIT_VIDEO);
-
-							if (SDL_WasInit(SDL_INIT_VIDEO)) {
-								screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, SDL_HWPALETTE|(fullscreen ? SDL_FULLSCREEN : 0));
-
-								if (screen == NULL) {
-									output_debug_message( "Couldn't set %ix%ix%i", SCREEN_X, SCREEN_Y, COLOUR_DEPTH);
-									if (fullscreen) {
-										output_debug_message( ",fullscreen,");
-									}
-									output_debug_message(" video mode: %s\n", SDL_GetError ());
-									quit = true;
-								} else {
-									output_debug_message( "Set the video resolution to: %ix%ix%i",
-										SDL_GetVideoSurface()->w, SDL_GetVideoSurface()->h,
-										SDL_GetVideoSurface()->format->BitsPerPixel);
-									if (fullscreen) {
-										output_debug_message( ",fullscreen");
-									}
-									output_debug_message("\n");
-								}
-
-								SDL_WM_SetCaption(MOG_VERSION_STRING, 0);
-								get_palette();
-							} else {
-								quit = true;
-							}
-                        }
+                    if (event.key.scancode == SDL_SCANCODE_RETURN && IsAltPressed2()) {
+						fullscreen = !fullscreen;
+						video_set_fullscreen(fullscreen);
                     }
 				
-					// Change graphic set with either F10 or 9 (F10 is already used in OSX)
-					if (event.key.keysym.sym == SDLK_F10 || event.key.keysym.sym == SDLK_9) {
+					// Change graphic set with either F10 or 9
+					if (event.key.scancode == SDL_SCANCODE_F10 || event.key.scancode == SDL_SCANCODE_9) {
 
 						act_g_path++;
 						if (act_g_path >= n_g_paths) {
@@ -151,8 +117,8 @@ int main(int argc, char** argv)
 						}
 					} 
 
-					// Change sound set with either F11 or 0 (F10 is already used in OSX)
-					if (event.key.keysym.sym == SDLK_F11 || event.key.keysym.sym == SDLK_0) {
+					// Change sound set with either F11 or 0
+					if (event.key.scancode == SDL_SCANCODE_F11 || event.key.scancode == SDL_SCANCODE_0) {
 
 						act_s_path++;
 						if (act_s_path >= n_s_paths) {
@@ -164,24 +130,26 @@ int main(int argc, char** argv)
 						ReloadSound();
 						music_recovery();
 						guardar_configuracion("MoG.cfg");
-						Mix_VolumeMusic(music_volume);
 						SetSFXVolume(sfx_volume);
 					}
 
-					if (event.key.keysym.sym == SDLK_d) {
+					if (event.key.scancode == SDL_SCANCODE_D) {
 						write_debug_report("debug-report.txt");
 					} 
                     break;
 
                 // quit game and close window 
-                case SDL_QUIT:
+                case SDL_EVENT_QUIT:
                     quit = true;
                     break;
             }
         }
+
+		Sound_update();
 		
 		// game main loop
 		act_time = SDL_GetTicks();
+		redraw = false;
         if (!quit && act_time - time >= REDRAWING_PERIOD) {
             int max_frame_step = 10;
             do {
@@ -193,13 +161,17 @@ int main(int argc, char** argv)
 	
 				// render graphics
 				Render(screen);
-				SDL_Flip(screen);
+				redraw = true;
 				
                 act_time = SDL_GetTicks();
                 max_frame_step--;
             } while (act_time - time >= REDRAWING_PERIOD && max_frame_step > 0);
 
         }
+		if (redraw) {
+			video_present(screen);
+			frames_per_sec_tmp++;
+		}
         if ((act_time - init_time) >= 1000) {
             frames_per_sec = frames_per_sec_tmp;
             frames_per_sec_tmp = 0;
@@ -215,74 +187,35 @@ int main(int argc, char** argv)
 }
 
 
-SDL_Surface* initializeSDL(int moreflags)
+SDL_Surface* initializeSDL(void)
 {
-	char VideoName[256];
 	SDL_Surface *screen;
 
-	int flags = SDL_HWPALETTE|moreflags;
+	output_debug_message( "Initializing SDL.\n");
 
-	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) < 0) {
+	if (!SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO)) {
+		output_debug_message( "Couldn't initialize SDL: %s\n", SDL_GetError());
+		fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
 		return 0;
 	}
 
-	output_debug_message( "Initializing SDL video subsystem.\n");
+    output_debug_message( "SDL video driver used: %s\n", SDL_GetCurrentVideoDriver());
+	output_debug_message( "SDL audio driver used: %s\n", SDL_GetCurrentAudioDriver());
 
-	if ((SDL_Init(SDL_INIT_VIDEO)) == -1) {
-		output_debug_message( "Couldn't initialize video subsystem: %s\n", SDL_GetError());
-		exit(-1);
-	}
-
-	SDL_VideoDriverName(VideoName, sizeof (VideoName));
-
-    output_debug_message( "SDL driver used: %s\n", VideoName);
-    // Set the environment variable SDL_VIDEODRIVER to override
-    // For Linux: x11 (default), dga, fbcon, directfb, svgalib,
-    //            ggi, aalib
-    // For Windows: directx (default), windib
-	output_debug_message( "SDL video subsystem initialized.\n");
-
-	output_debug_message( "Initializing SDL audio subsystem.\n");
-
-	if ((SDL_InitSubSystem(SDL_INIT_AUDIO)) == -1) {
-	  output_debug_message( "Couldn't initialize audio subsystem: %s\n", SDL_GetError());
-	  exit(-1);
-	}
-	output_debug_message( "SDL audio subsystem initialized.\n");
-
-
-	atexit(SDL_Quit);
-	SDL_WM_SetCaption(MOG_VERSION_STRING, 0);
-	
-	if (fullscreen) {
-		SDL_ShowCursor(SDL_DISABLE);
-	}
-	
 	Sound_initialization();
 
-	pause(1000);
+	if (!video_init(SCREEN_X, SCREEN_Y, fullscreen, window_scale)) {
+		fprintf(stderr, "Couldn't open the window: %s\n", SDL_GetError());
+		return 0;
+	}
 
-	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, COLOUR_DEPTH, flags);
+	/* The game draws palette indices into this surface (see render.cpp). */ 
+	screen = SDL_CreateSurface(SCREEN_X, SCREEN_Y, SDL_PIXELFORMAT_INDEX8);
+	if (screen == 0 || SDL_CreateSurfacePalette(screen) == 0) {
+		output_debug_message( "Couldn't create the %ix%i screen surface: %s\n", SCREEN_X, SCREEN_Y, SDL_GetError());
+		return 0;
+	}
 
-	if (screen == NULL) {
-		output_debug_message( "Couldn't set %ix%ix%i", SCREEN_X, SCREEN_Y, COLOUR_DEPTH);
-	    if (fullscreen) {
-			output_debug_message( ",fullscreen,");
-	    }
-		output_debug_message(" video mode: %s\n", SDL_GetError ());
-	    exit(-1);
-	} else {
-	    output_debug_message( "Set the video resolution to: %ix%ix%i",
-				 SDL_GetVideoSurface()->w, SDL_GetVideoSurface()->h,
-				 SDL_GetVideoSurface()->format->BitsPerPixel);
-	    if (fullscreen) {
-			output_debug_message( ",fullscreen");
-		}
-	    output_debug_message("\n");
-    }
-	
-	SDL_EnableUNICODE(1);
-	
 	return screen;
 }
 
@@ -291,6 +224,7 @@ void finalizeSDL()
 	ReleaseSound(true);
 	ReleaseGraphics();
 	Sound_release();
+	SDL_DestroySurface(screen);
+	video_release();
 	SDL_Quit();
 }
-

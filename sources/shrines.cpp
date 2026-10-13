@@ -1,8 +1,8 @@
 #include "math.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "SDL.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include "keyboardstate.h"
 #include "sound.h"
 #include "MOGtypes.h"
 
@@ -41,7 +41,7 @@ extern bool sword;				/* Hay que dibujar la espada?	*/
 extern bool old_sword;
 extern int sword_x,sword_y;	/* Coordenadas de la espada.	*/ 
 extern int sword_time;
-extern unsigned char old_keyboard[SDLK_LAST];
+extern unsigned char old_keyboard[KEYBOARD_SIZE];
 extern int in_ladder;			/* En qué escalera está el personaje	*/ 
 extern bool previous_x_collision;	/* Hubo una colisión en X en el frame anterior? */ 
 extern bool previous_y_collision;	/* Hubo una colisión en Y en el frame anterior? */ 
@@ -129,8 +129,8 @@ extern int zoom;
 
 
 /* Teclas: */ 
-extern SDLKey UP_KEY,DOWN_KEY,LEFT_KEY,RIGHT_KEY;
-extern SDLKey SWORD_KEY,WEAPON_KEY,ITEM_KEY,PAUSE_KEY;
+extern SDL_Scancode UP_KEY,DOWN_KEY,LEFT_KEY,RIGHT_KEY;
+extern SDL_Scancode SWORD_KEY,WEAPON_KEY,ITEM_KEY,PAUSE_KEY;
 
 
 
@@ -139,7 +139,7 @@ void passage_mainloop(int map,int map_x,int map_y,unsigned char *screen,int dx,i
 	unsigned char *keyboard;
 
 	SDL_PumpEvents();
-	keyboard = (unsigned char *)SDL_GetKeyState(NULL);
+	keyboard = keyboard_get_state();
 
 	/* Dibujar el marco: */ 
 	int i;
@@ -251,11 +251,11 @@ void passage_mainloop(int map,int map_x,int map_y,unsigned char *screen,int dx,i
 		int slot=-1;
 		/* Guardar el juego a disco: */ 
 
-		if (keyboard[SDLK_F5] && !old_keyboard[SDLK_F5]) slot=1;
-		if (keyboard[SDLK_F6] && !old_keyboard[SDLK_F6]) slot=2;
-		if (keyboard[SDLK_F7] && !old_keyboard[SDLK_F7]) slot=3;
-		if (keyboard[SDLK_F8] && !old_keyboard[SDLK_F8]) slot=4;
-		if (keyboard[SDLK_F9] && !old_keyboard[SDLK_F9]) slot=5;
+		if (keyboard[SDL_SCANCODE_F5] && !old_keyboard[SDL_SCANCODE_F5]) slot=1;
+		if (keyboard[SDL_SCANCODE_F6] && !old_keyboard[SDL_SCANCODE_F6]) slot=2;
+		if (keyboard[SDL_SCANCODE_F7] && !old_keyboard[SDL_SCANCODE_F7]) slot=3;
+		if (keyboard[SDL_SCANCODE_F8] && !old_keyboard[SDL_SCANCODE_F8]) slot=4;
+		if (keyboard[SDL_SCANCODE_F9] && !old_keyboard[SDL_SCANCODE_F9]) slot=5;
 
 		if (slot!=-1) {
 			char passwd[48];
