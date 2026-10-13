@@ -45,7 +45,7 @@ extern char **s_paths;
 extern int n_s_paths,act_s_path;
 extern char *s_path;
 
-/* Gr·ficos: */ 
+/* Gr√°ficos: */ 
 Bitmap *konami_bmp=0,*menu_bmp=0,*tiles_bmp=0,*tiles2_bmp=0,*enemy_bmp=0,*enemy2_bmp=0,*final_bmp=0;
 int n_tiles=0;
 CTile **tiles=0;
@@ -65,9 +65,9 @@ int frame_counter=0;
 bool pause=false;
 
 int pause_state=0;
-int map=0;			/* En que mundo est· el personaje			*/ 
-int map_x=0,map_y=0;	/* En que habitaciÛn dentro del mundo		*/ 
-int pers_x=0,pers_y=0;	/* PosiciÛn del personaje en la habitaciÛn	*/ 
+int map=0;			/* En que mundo est√° el personaje			*/ 
+int map_x=0,map_y=0;	/* En que habitaci√≥n dentro del mundo		*/ 
+int pers_x=0,pers_y=0;	/* Posici√≥n del personaje en la habitaci√≥n	*/ 
 int pers_pos=0;
 bool pers_right=true;	/* Hacia donde mira el personaje			*/ 
 int pers_state=0;		/* Estado en el que se encuentra el personaje	*/ 
@@ -78,22 +78,22 @@ bool sword=false;				/* Hay que dibujar la espada?	*/
 bool old_sword=false;
 int sword_x=0,sword_y=0;	/* Coordenadas de la espada.	*/ 
 int sword_time=0;
-int in_ladder=-1;			/* En quÈ escalera est· el personaje	*/ 
-bool previous_x_collision=false;	/* Hubo una colisiÛn en X en el frame anterior? */ 
-bool previous_y_collision=false;	/* Hubo una colisiÛn en Y en el frame anterior? */ 
-int hit_time=0;	/* Contador para saber cuando pueden daÒarnos de nuevo	*/ 
+int in_ladder=-1;			/* En qu√© escalera est√° el personaje	*/ 
+bool previous_x_collision=false;	/* Hubo una colisi√≥n en X en el frame anterior? */ 
+bool previous_y_collision=false;	/* Hubo una colisi√≥n en Y en el frame anterior? */ 
+int hit_time=0;	/* Contador para saber cuando pueden da√±arnos de nuevo	*/ 
 int character=0;	/* Personaje seleccionado	*/ 
-bool live_character[2]={true,true};	/* Si los personajes est·n vivos o muertos */ 
+bool live_character[2]={true,true};	/* Si los personajes est√°n vivos o muertos */ 
 bool can_revive_character[2]={true,true}; /* Si los personajes pueden revivir otra vez o no */ 
 int current_weapon=-1;	/* arma seleccionada */ 
-int n_fired_arrows=0;	/* N∫ de flechas activas	*/ 
-int n_fired_mines=0;	/* N∫ de flechas activas	*/ 
-int in_door=-1; /* Objeto en el que est· la puerta en la que se acaba de entrar	*/ 
-int freezed=0;	/* Controla si el protagonista est· congelado */ 
-bool in_water=false;	/* Indica si el personaje est· dentro del agua o no */ 
+int n_fired_arrows=0;	/* N¬∫ de flechas activas	*/ 
+int n_fired_mines=0;	/* N¬∫ de flechas activas	*/ 
+int in_door=-1; /* Objeto en el que est√° la puerta en la que se acaba de entrar	*/ 
+int freezed=0;	/* Controla si el protagonista est√° congelado */ 
+bool in_water=false;	/* Indica si el personaje est√° dentro del agua o no */ 
 bool in_lava=false;
-int water_counter=0;	/* Indica cuanto tiempo hace de que un personaje entrÛ en el agua */ 
-int lava_counter=0;	/* Indica cuanto tiempo hace de que un personaje entrÛ en la lava */ 
+int water_counter=0;	/* Indica cuanto tiempo hace de que un personaje entr√≥ en el agua */ 
+int lava_counter=0;	/* Indica cuanto tiempo hace de que un personaje entr√≥ en la lava */ 
 bool mine_stepped=false;
 bool item[38];	/*  0 - 29	: items	*/ 
 				/* 30 - 31  : escudos de bronce y plata */ 
@@ -105,13 +105,13 @@ bool world_doors_open[10];
 int world_key_item=0;
 int to_enter_cut=0;	/* Controla los cortes que sufre el personaje al	*/ 
 					/* entrar por las puertas.							*/ 
-int currently_selecting=0;	/* Sirve para saber si se est· seleccionando	*/ 
+int currently_selecting=0;	/* Sirve para saber si se est√° seleccionando	*/ 
 							/* personaje o arma.							*/ 
 bool shop_item[3];
 int passage_state=0;
 unsigned char old_keyboard[KEYBOARD_SIZE];
 int stone_hit_counter=0;	/* Sirve para acelerar el movimiento de la espada cuando	*/ 
-							/* Aprodite est· rompiedo rocas.							*/ 
+							/* Aprodite est√° rompiedo rocas.							*/ 
 int bible_counter=0,bible_subcounter=0;
 bool ZEUS_password=false,ZEUS_used=false;
 
@@ -123,7 +123,7 @@ bool room_watermonster=false; /* Indica que hay monstruo en el agua.	*/
 bool room_fallingstones=false,room_rollingstones=false; /* Indica si caen piedras */ 
 int stones_counter=0;
 bool room_blobs=false;	/* Indica si hay bichos rojos que suben	*/ 
-bool room_demonroom=false,old_room_demonroom=false;	/* Indica si es la habitaciÛn de un monstruo. */ 
+bool room_demonroom=false,old_room_demonroom=false;	/* Indica si es la habitaci√≥n de un monstruo. */ 
 int world5_room44_state=0,world5_room44_state2=0,world5_room44_state3=0;
 int world5_room64_state=0;
 int world6_room35_state=0;
@@ -728,7 +728,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 
 			drawstats(screen,dx,dy);
 		
-			/* PopolÛn y aphrodite: */ 
+			/* Popol√≥n y aphrodite: */ 
 			if (live_character[0]) 
 				tiles[stats_tile+1]->
 					draw(GAME_VIEW_X+TILE_SIZE_X*12,GAME_VIEW_Y+TILE_SIZE_Y*1,
@@ -751,7 +751,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				} /* if */ 
 			} /* if */ 
 
-			/* Õtems: */ 
+			/* √çtems: */ 
 			tile_print("ITEM",TILE_SIZE_X*18,GAME_VIEW_Y+TILE_SIZE_Y*5,screen,dx,dy);
 			{
 				int i,j;
@@ -954,7 +954,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				SUBSTATE=1;
 			} /* if */ 
 
-			/* Halo de ·ngel: */ 
+			/* Halo de √°ngel: */ 
 			if (item[8] && (fighting_demon==0 || fighting_demon==432) &&
 				!old_keyboard[SDL_SCANCODE_RETURN] && keyboard[SDL_SCANCODE_RETURN]) 
 			{
@@ -1075,7 +1075,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				SUBSTATE=1;
 			} /* if */ 
 			break;
-	case 7:	/* DENTRO DE ALG⁄N PASAJE, TIENDA, ETC.: */ 
+	case 7:	/* DENTRO DE ALG√öN PASAJE, TIENDA, ETC.: */ 
 			if (SUBSTATE==0) {
 				SUBSTATE=1;
 				currently_selecting=0;
@@ -1096,7 +1096,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 			if (!old_keyboard[DOWN_KEY] && keyboard[DOWN_KEY]) {
 				STATE=4;
 				SUBSTATE=1;
-				/* Restaurar la m˙sica de juego normal: */ 
+				/* Restaurar la m√∫sica de juego normal: */ 
 				char tmp[80],tmp2[80];
 				Sound_release_music();
 				sprintf(tmp2,"entering");
@@ -1428,7 +1428,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 						int tmp_x,tmp_y,heur,act_heur;
 						int colision=T_WALL|T_LADDER_WALL|T_DOOR_WALL;
 
-						/* Reinicializar la habitaciÛn: */ 
+						/* Reinicializar la habitaci√≥n: */ 
 						HP_filter(map_x,map_y);
 						loadroom(map,map_x,map_y);
 						HP_restore(map_x,map_y);
@@ -1437,7 +1437,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 						drawmap(screen,dx,dy,1);
 						memset(screen,0,dx*dy);
 
-						/* Calcular la nueva posiciÛn del personaje en el mapa: */ 
+						/* Calcular la nueva posici√≥n del personaje en el mapa: */ 
 						character=1-character;
 						tmp_x=8;
 						tmp_y=4;
@@ -1632,7 +1632,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				int xpos[16]={10,11,12,13,15,16,17,18,20,21,22,23,25,26,27,28};
 				int x,y;
 
-				/* Entrando cÛdigo!!!!: */ 
+				/* Entrando c√≥digo!!!!: */ 
 				memset(screen,0,dx*dy);
 				tile_print("h F5 TO F9",TILE_SIZE_X*9,TILE_SIZE_Y*2,screen,dx,dy);
 
@@ -2202,7 +2202,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 					"    ORIGINALLY AT  1987",
 					"",
 					"    REMAKE PRESENTED BY ",
-					"   SANTI ONTA—ON AT 2002"};
+					"   SANTI ONTA√ëON AT 2002"};
 
 
 				if (SUBSTATE<(512+27*TILE_SIZE_Y)) y=27*TILE_SIZE_Y-(SUBSTATE-512);
@@ -2325,6 +2325,23 @@ void GameCycle(BYTE *screen,int dx,int dy)
 
 		logic_dx[1]=physic_dx[1]=0;
 	} /* if */ 
+
+	/* What the gamepads do on the next cycle, on this screen: */ 
+	switch(STATE) {
+	case 4: case 5: case 6: case 7: case 8: case 9:
+	case 11: case 12: case 13: case 16:
+		keyboard_set_context(KEYBOARD_CONTEXT_GAME);
+		break;
+	case 10: case 14: case 15:
+		keyboard_set_context(KEYBOARD_CONTEXT_NONE);
+		break;
+	case 19:
+		keyboard_set_context(KEYBOARD_CONTEXT_GAME_MENU);
+		break;
+	default:
+		keyboard_set_context(KEYBOARD_CONTEXT_MENU);
+		break;
+	} /* switch */ 
 
 	/* Viejo estado del teclado: */ 
 	for(int i=0;i<KEYBOARD_SIZE;i++) old_keyboard[i]=keyboard[i];

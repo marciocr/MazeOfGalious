@@ -138,6 +138,14 @@ int main(int argc, char** argv)
 					} 
                     break;
 
+                case SDL_EVENT_GAMEPAD_ADDED:
+                    keyboard_gamepad_added(event.gdevice.which);
+                    break;
+
+                case SDL_EVENT_GAMEPAD_REMOVED:
+                    keyboard_gamepad_removed(event.gdevice.which);
+                    break;
+
                 // quit game and close window 
                 case SDL_EVENT_QUIT:
                     quit = true;
@@ -160,7 +168,9 @@ int main(int argc, char** argv)
 
 	
 				// render graphics
+				keyboard_update_gamepads();
 				Render(screen);
+				keyboard_cycle_done();
 				redraw = true;
 				
                 act_time = SDL_GetTicks();
@@ -193,7 +203,7 @@ SDL_Surface* initializeSDL(void)
 
 	output_debug_message( "Initializing SDL.\n");
 
-	if (!SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO)) {
+	if (!SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_GAMEPAD)) {
 		output_debug_message( "Couldn't initialize SDL: %s\n", SDL_GetError());
 		fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
 		return 0;
@@ -224,6 +234,7 @@ void finalizeSDL()
 	ReleaseSound(true);
 	ReleaseGraphics();
 	Sound_release();
+	keyboard_close_gamepads();
 	SDL_DestroySurface(screen);
 	video_release();
 	SDL_Quit();
