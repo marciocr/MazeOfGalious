@@ -4,6 +4,7 @@
 #include "keyboardstate.h"
 #include "sound.h"
 #include "video.h"
+#include "postfx.h"
 #include "MOGtypes.h"
 #include "drawing.h"
 #include "bitmaps.h"
@@ -75,7 +76,7 @@ static int n_items(void)
 	switch(page) {
 	case PAGE_MAIN: return 4;		/* AUDIO, VIDEO, CONTROLS, BACK */
 	case PAGE_AUDIO: return 3;		/* MUSIC, SFX, BACK */
-	case PAGE_VIDEO: return 3;		/* FULLSCREEN, WINDOW SIZE, BACK */
+	case PAGE_VIDEO: return 4;		/* FULLSCREEN, WINDOW SIZE, FILTER, BACK */
 	case PAGE_CONTROLS: return 3;	/* DEVICE, REDEFINE KEYS, BACK */
 	} /* switch */
 	return 1;
@@ -224,6 +225,13 @@ void OptionsCycle(BYTE *screen,int dx,int dy,unsigned char *keyboard)
 			if (scale>max_scale) scale=1;
 			video_set_window_scale(scale);
 		} /* if */
+		if (selected==2 && (change!=0 || confirm) && hold_cycles<=1) {
+			int filter=video_get_filter()+(change<0 ? -1:1);
+
+			if (filter<0) filter=N_FILTERS-1;
+			if (filter>=N_FILTERS) filter=FILTER_OFF;
+			video_set_filter(filter);	/* OFF if the GPU can't run it */
+		} /* if */
 		break;
 
 	case PAGE_CONTROLS:
@@ -266,7 +274,9 @@ void OptionsCycle(BYTE *screen,int dx,int dy,unsigned char *keyboard)
 		item(tmp,7,0,screen,dx,dy);
 		sprintf(tmp,"WINDOW SIZE:       %iX",video_get_window_scale());
 		item(tmp,9,1,screen,dx,dy);
-		item("BACK",14,2,screen,dx,dy);
+		sprintf(tmp,"FILTER:            %s",postfx_filter_name(video_get_filter()));
+		item(tmp,11,2,screen,dx,dy);
+		item("BACK",14,3,screen,dx,dy);
 		break;
 
 	case PAGE_CONTROLS:

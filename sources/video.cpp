@@ -5,6 +5,7 @@
 #include <SDL3/SDL_opengl.h>
 
 #include "video.h"
+#include "postfx.h"
 #include "debug.h"
 
 #ifndef MOG_VERSION_STRING
@@ -13,7 +14,9 @@
 
 static SDL_Window *window=0;
 static SDL_GLContext gl_context=0;
-static GLuint screen_tex=0;
+/* The frame as RGBA: at 640x400, and at 320x200 for the filters when it is
+   doubled MSX art (see video_upload). */ 
+static GLuint screen_tex=0,half_tex=0;
 static Uint32 *rgba_buffer=0;
 static int game_w=0,game_h=0;
 /* The 640x400 image is shown on a 4:3 screen, as on the original monitors
@@ -21,6 +24,18 @@ static int game_w=0,game_h=0;
 static int display_w=0,display_h=0;
 static bool fullscreen=false;
 static int window_scale=1;
+
+
+void video_set_filter(int filter)
+{
+	postfx_set_filter(filter);
+} /* video_set_filter */ 
+
+
+int video_get_filter(void)
+{
+	return video_filter;
+} /* video_get_filter */ 
 
 
 SDL_Window *video_window(void)
@@ -62,6 +77,23 @@ static void video_apply(void)
 } /* video_apply */ 
 
 
+static GLuint create_texture(int w,int h)
+{
+	GLuint tex;
+
+	glGenTextures(1,&tex);
+	glBindTexture(GL_TEXTURE_2D,tex);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,w,h,0,GL_RGBA,GL_UNSIGNED_BYTE,0);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D,0);
+
+	return tex;
+} /* create_texture */ 
+
+
 bool video_init(int w,int h,bool fs,int scale)
 {
 	game_w=w;
@@ -95,14 +127,8 @@ bool video_init(int w,int h,bool fs,int scale)
 
 	rgba_buffer=new Uint32[game_w*game_h];
 
-	glGenTextures(1,&screen_tex);
-	glBindTexture(GL_TEXTURE_2D,screen_tex);
-	glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,game_w,game_h,0,GL_RGBA,GL_UNSIGNED_BYTE,0);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D,0);
+	screen_tex=create_texture(game_w,game_h);
+	half_tex=create_texture(game_w/2,game_h/2);
 
 	if (!fullscreen) {
 		int max_scale=video_max_window_scale();
@@ -117,8 +143,10 @@ bool video_init(int w,int h,bool fs,int scale)
 
 void video_release(void)
 {
+	postfx_release();
 	if (screen_tex!=0) glDeleteTextures(1,&screen_tex);
-	screen_tex=0;
+	if (half_tex!=0) glDeleteTextures(1,&half_tex);
+	screen_tex=half_tex=0;
 	delete []rgba_buffer;
 	rgba_buffer=0;
 	if (gl_context!=0) SDL_GL_DestroyContext(gl_context);
@@ -154,13 +182,36 @@ int video_get_window_scale(void)
 } /* video_get_window_scale */ 
 
 
-/* Converts the 8-bit screen through its palette into the texture. */ 
-static void video_upload(SDL_Surface *screen)
+/* True if every 2x2 block of the frame is one colour: the original MSX
+   graphics drawn at double size, which the pixel art filters must see at
+   their real resolution to do anything. */ 
+static bool video_doubled(SDL_Surface *screen)
+{
+	int x,y;
+
+	for(y=0;y<game_h;y+=2) {
+		Uint8 *a=(Uint8 *)screen->pixels+y*screen->pitch;
+		Uint8 *b=a+screen->pitch;
+
+		for(x=0;x<game_w;x+=2) {
+			if (a[x]!=a[x+1] || a[x]!=b[x] || a[x]!=b[x+1]) return false;
+		} /* for */ 
+	} /* for */ 
+
+	return true;
+} /* video_doubled */ 
+
+
+/* Converts the 8-bit screen through its palette into a texture, bottom row
+   first (OpenGL's order, as the filters expect). Returns the texture and
+   its size. */ 
+static GLuint video_upload(SDL_Surface *screen,int *tex_w,int *tex_h)
 {
 	SDL_Palette *palette=SDL_GetSurfacePalette(screen);
 	Uint32 lut[256];
 	Uint8 *rgba;
-	int i,x,y;
+	int i,x,y,step=1;
+	GLuint tex=screen_tex;
 
 	for(i=0;i<256;i++) {
 		rgba=(Uint8 *)&lut[i];
@@ -174,24 +225,35 @@ static void video_upload(SDL_Surface *screen)
 		rgba[3]=255;
 	} /* for */ 
 
-	for(y=0;y<game_h;y++) {
-		Uint8 *src=(Uint8 *)screen->pixels+y*screen->pitch;
-		Uint32 *dst=rgba_buffer+y*game_w;
+	if (postfx_active() && video_doubled(screen)) {
+		step=2;
+		tex=half_tex;
+	} /* if */ 
+	*tex_w=game_w/step;
+	*tex_h=game_h/step;
 
-		for(x=0;x<game_w;x++) dst[x]=lut[src[x]];
+	for(y=0;y<*tex_h;y++) {
+		Uint8 *src=(Uint8 *)screen->pixels+y*step*screen->pitch;
+		Uint32 *dst=rgba_buffer+(*tex_h-1-y)*(*tex_w);
+
+		for(x=0;x<*tex_w;x++) dst[x]=lut[src[x*step]];
 	} /* for */ 
 
-	glBindTexture(GL_TEXTURE_2D,screen_tex);
+	glBindTexture(GL_TEXTURE_2D,tex);
 	glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-	glTexSubImage2D(GL_TEXTURE_2D,0,0,0,game_w,game_h,GL_RGBA,GL_UNSIGNED_BYTE,rgba_buffer);
+	glTexSubImage2D(GL_TEXTURE_2D,0,0,0,*tex_w,*tex_h,GL_RGBA,GL_UNSIGNED_BYTE,rgba_buffer);
+	glBindTexture(GL_TEXTURE_2D,0);
+
+	return tex;
 } /* video_upload */ 
 
 
 void video_present(SDL_Surface *screen)
 {
-	int window_w=game_w,window_h=game_h,w,h;
+	int window_w=game_w,window_h=game_h,w,h,tex_w,tex_h;
+	GLuint tex;
 
-	video_upload(screen);
+	tex=video_upload(screen,&tex_w,&tex_h);
 
 	SDL_GetWindowSizeInPixels(window,&window_w,&window_h);
 
@@ -207,23 +269,27 @@ void video_present(SDL_Surface *screen)
 	glViewport(0,0,window_w,window_h);
 	glClearColor(0,0,0,1);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glViewport((window_w-w)/2,(window_h-h)/2,w,h);
+	if (postfx_active()) {
+		postfx_draw(tex,tex_w,tex_h,(window_w-w)/2,(window_h-h)/2,w,h);
+	} else {
+		glViewport((window_w-w)/2,(window_h-h)/2,w,h);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
 
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D,screen_tex);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0,1); glVertex2f(-1,-1);
-	glTexCoord2f(1,1); glVertex2f(1,-1);
-	glTexCoord2f(1,0); glVertex2f(1,1);
-	glTexCoord2f(0,0); glVertex2f(-1,1);
-	glEnd();
-	glBindTexture(GL_TEXTURE_2D,0);
-	glDisable(GL_TEXTURE_2D);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D,tex);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0,0); glVertex2f(-1,-1);
+		glTexCoord2f(1,0); glVertex2f(1,-1);
+		glTexCoord2f(1,1); glVertex2f(1,1);
+		glTexCoord2f(0,1); glVertex2f(-1,1);
+		glEnd();
+		glBindTexture(GL_TEXTURE_2D,0);
+		glDisable(GL_TEXTURE_2D);
+	} /* if */ 
 
 	SDL_GL_SwapWindow(window);
 } /* video_present */ 

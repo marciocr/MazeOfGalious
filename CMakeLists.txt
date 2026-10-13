@@ -33,6 +33,8 @@ set(SHARED_SOURCES
 	sources/options.cpp
 	sources/passwords.cpp
 	sources/path.cpp
+	sources/postfx.cpp
+	sources/postfx.h
 	sources/render.cpp
 	sources/roomchange.cpp
 	sources/shrines.cpp

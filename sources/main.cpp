@@ -23,6 +23,7 @@ int SCREEN_X = 640;
 int SCREEN_Y = 400;
 int COLOUR_DEPTH = 8;
 int window_scale = 2;
+int window_filter = 0;	/* FILTER_* in postfx.h */
 
 #define TRANSPARANT_COLOR (0)
 
@@ -222,6 +223,7 @@ SDL_Surface* initializeSDL(void)
 		fprintf(stderr, "Couldn't open the window: %s\n", SDL_GetError());
 		return 0;
 	}
+	video_set_filter(window_filter);
 
 	/* The game draws palette indices into this surface (see render.cpp). */ 
 	screen = SDL_CreateSurface(SCREEN_X, SCREEN_Y, SDL_PIXELFORMAT_INDEX8);

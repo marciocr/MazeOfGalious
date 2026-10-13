@@ -16,6 +16,11 @@ void video_set_window_scale(int scale);
 int video_get_window_scale(void);
 int video_max_window_scale(void);
 
+/* Upscaling filter, FILTER_* in postfx.h (falls back to FILTER_OFF if the
+   GPU can't run it): */ 
+void video_set_filter(int filter);
+int video_get_filter(void);
+
 SDL_Window *video_window(void);
 
 #endif

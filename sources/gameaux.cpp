@@ -2473,7 +2473,7 @@ int add_object(int type,int x,int y,int size,int enemy,int state)
 
 /* Video settings read from MoG.cfg, used when the window is created: */ 
 extern bool fullscreen;
-extern int window_scale;
+extern int window_scale,window_filter;
 
 
 void guardar_configuracion(char *filename)
@@ -2501,6 +2501,7 @@ void guardar_configuracion(char *filename)
 		   before them): */ 
 		fprintf(fp,"fullscreen %i\n",video_get_fullscreen() ? 1:0);
 		fprintf(fp,"window_scale %i\n",video_get_window_scale());
+		fprintf(fp,"filter %i\n",video_get_filter());
 		fprintf(fp,"gamepad_device %i\n",gamepad_device);
 
 		fclose(fp);
@@ -2566,6 +2567,7 @@ bool cargar_configuracion(char *filename)
 		while(fscanf(fp,"%63s %i",name,&value)==2) {
 			if (strcmp(name,"fullscreen")==0) fullscreen=(value!=0);
 			if (strcmp(name,"window_scale")==0 && value>=1) window_scale=value;
+			if (strcmp(name,"filter")==0) window_filter=value;
 			if (strcmp(name,"gamepad_device")==0 && value>=-1 && value<MAX_GAMEPADS) gamepad_device=value;
 		} /* while */ 
 	}
