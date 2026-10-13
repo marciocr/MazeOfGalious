@@ -30,6 +30,7 @@ set(SHARED_SOURCES
 	sources/main.cpp
 	sources/mog.h
 	sources/object.h
+	sources/options.cpp
 	sources/passwords.cpp
 	sources/path.cpp
 	sources/render.cpp

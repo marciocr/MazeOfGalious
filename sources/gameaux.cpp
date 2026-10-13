@@ -5,6 +5,7 @@
 #include <SDL3/SDL.h>
 #include "keyboardstate.h"
 #include "loadpcx.h"
+#include "video.h"
 #include "sound.h"
 #include "MOGtypes.h"
 
@@ -2470,6 +2471,11 @@ int add_object(int type,int x,int y,int size,int enemy,int state)
 } /* add_object */ 
 
 
+/* Video settings read from MoG.cfg, used when the window is created: */ 
+extern bool fullscreen;
+extern int window_scale;
+
+
 void guardar_configuracion(char *filename)
 {
 	FILE *fp;
@@ -2490,6 +2496,12 @@ void guardar_configuracion(char *filename)
 
 		/* Music and SFX volumes: */ 
 		fprintf(fp,"%i %i\n",music_volume,sfx_volume);
+
+		/* Newer settings, as "name value" lines (older versions stop reading
+		   before them): */ 
+		fprintf(fp,"fullscreen %i\n",video_get_fullscreen() ? 1:0);
+		fprintf(fp,"window_scale %i\n",video_get_window_scale());
+		fprintf(fp,"gamepad_device %i\n",gamepad_device);
 
 		fclose(fp);
 	} /* if */ 
@@ -2545,6 +2557,18 @@ bool cargar_configuracion(char *filename)
 
 	/* Music and SFX volumes: */ 
 	fscanf(fp,"%i %i",&music_volume,&sfx_volume);
+
+	/* Newer settings (missing in files from older versions): */ 
+	{
+		char name[64];
+		int value;
+
+		while(fscanf(fp,"%63s %i",name,&value)==2) {
+			if (strcmp(name,"fullscreen")==0) fullscreen=(value!=0);
+			if (strcmp(name,"window_scale")==0 && value>=1) window_scale=value;
+			if (strcmp(name,"gamepad_device")==0 && value>=-1 && value<MAX_GAMEPADS) gamepad_device=value;
+		} /* while */ 
+	}
 
 	fclose(fp);
 	return true;

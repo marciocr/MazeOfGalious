@@ -54,6 +54,7 @@ BYTE *col_buffer=0;
 
 /* Estado: */ 
 int STATE=0,SUBSTATE=0,OLDSTATE=0,MENUOPTION=0;
+static int title_option=0;	/* 0 = PLAY START, 1 = OPTIONS */ 
 int cycle=0;
 
 /* Developers variables: */ 
@@ -363,7 +364,9 @@ void GameCycle(BYTE *screen,int dx,int dy)
 			memset(screen,0,dx*dy);
 //				set_palete((BYTE *)tiles_bmp->get_palete());
 			menu_bmp->draw(0,0,dx,dy,screen,dx,dy,dx);
-			tile_print("PUSH SPACE KEY",TILE_SIZE_X*13,TILE_SIZE_Y*19,screen,dx,dy);
+			B_rectangle(screen,TILE_SIZE_X*13,TILE_SIZE_Y*(19+title_option),TILE_SIZE_X*14,TILE_SIZE_Y,dx,47);
+			tile_print("PLAY START",TILE_SIZE_X*15,TILE_SIZE_Y*19,screen,dx,dy);
+			tile_print("OPTIONS",TILE_SIZE_X*16,TILE_SIZE_Y*20,screen,dx,dy);
 
 			sprintf(tmp,"F10 OR 9 CHANGES GRAPHIC SET: %s",g_path+9);
 			tmp[strlen(tmp)-1]=0;
@@ -373,9 +376,27 @@ void GameCycle(BYTE *screen,int dx,int dy)
 			strupr(tmp);
 			tmp[strlen(tmp)-1]=0;
 			tile_print(tmp,TILE_SIZE_X*2,TILE_SIZE_Y*22,screen,dx,dy);
-			tile_print("PRESS K TO REDEFINE THE KEYS",TILE_SIZE_X*6,TILE_SIZE_Y*23,screen,dx,dy);
+			tile_print("O: OPTIONS   K: REDEFINE THE KEYS",TILE_SIZE_X*3,TILE_SIZE_Y*23,screen,dx,dy);
 
-			if (keyboard[SDL_SCANCODE_SPACE]  && !old_keyboard[SDL_SCANCODE_SPACE]) {
+			if ((keyboard[SDL_SCANCODE_UP] && !old_keyboard[SDL_SCANCODE_UP]) ||
+				(keyboard[SDL_SCANCODE_DOWN] && !old_keyboard[SDL_SCANCODE_DOWN])) {
+				title_option=1-title_option;
+				Sound_play(S_select);
+				SUBSTATE=0;
+			} /* if */ 
+			if (((keyboard[SDL_SCANCODE_SPACE] && !old_keyboard[SDL_SCANCODE_SPACE]) ||
+				 (keyboard[SDL_SCANCODE_RETURN] && !old_keyboard[SDL_SCANCODE_RETURN])) && title_option==1) {
+				start_options();
+				break;
+			} /* if */ 
+			if (keyboard[SDL_SCANCODE_O] && !old_keyboard[SDL_SCANCODE_O]) {
+				title_option=1;
+				start_options();
+				break;
+			} /* if */ 
+
+			if ((keyboard[SDL_SCANCODE_SPACE] && !old_keyboard[SDL_SCANCODE_SPACE]) ||
+				(keyboard[SDL_SCANCODE_RETURN] && !old_keyboard[SDL_SCANCODE_RETURN])) {
 				developer_start_x=-1;
 				developer_start_y=-1;
 				developer_start_map=-1;
@@ -384,8 +405,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				SUBSTATE=0;
 			} /* if */ 
 			if (keyboard[SDL_SCANCODE_K] && !old_keyboard[SDL_SCANCODE_K]) {
-				STATE=10;
-				SUBSTATE=0;
+				start_key_redefinition(2);
 			} /* if */ 
 			if (keyboard[SDL_SCANCODE_L] && !old_keyboard[SDL_SCANCODE_L]) {
 				int i;
@@ -1300,9 +1320,18 @@ void GameCycle(BYTE *screen,int dx,int dy)
 					tile_print(strupr(tmp),TILE_SIZE_X*26,TILE_SIZE_Y*16,screen,dx,dy);
 				} /* if */ 
 
-				tile_print("TO GO TO THE TITLE SCREEN PRESS:  ESC",TILE_SIZE_X*2,TILE_SIZE_Y*18,screen,dx,dy);
+				if (SUBSTATE<8) {
+					tile_print("TO CANCEL PRESS:                  ESC",TILE_SIZE_X*2,TILE_SIZE_Y*18,screen,dx,dy);
+				} else {
+					tile_print("TO SAVE THE KEYS PRESS:         SPACE",TILE_SIZE_X*2,TILE_SIZE_Y*18,screen,dx,dy);
+				} /* if */ 
 				tile_print("TO EXIT THE GAME PRESS:           F12",TILE_SIZE_X*2,TILE_SIZE_Y*19,screen,dx,dy);
 				tile_print("TO CHANGE THE ZOOM:         PGUP:PGDN",TILE_SIZE_X*2,TILE_SIZE_Y*20,screen,dx,dy);
+
+				if (SUBSTATE<8 && keyboard[SDL_SCANCODE_ESCAPE] && !old_keyboard[SDL_SCANCODE_ESCAPE]) {
+					end_key_redefinition(true);
+					break;
+				} /* if */ 
 
 				found=false;
 				for(i=0;!found && i<KEYBOARD_SIZE;i++) {
@@ -1349,9 +1378,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 					 (keyboard[SDL_SCANCODE_RETURN] && !old_keyboard[SDL_SCANCODE_RETURN]) ||
 					 (keyboard[SDL_SCANCODE_ESCAPE] && !old_keyboard[SDL_SCANCODE_ESCAPE]) ||
 					 (keyboard[SDL_SCANCODE_K] && !old_keyboard[SDL_SCANCODE_K]))) {
-					STATE=2;
-					SUBSTATE=0;
-					guardar_configuracion("MoG.cfg");
+					end_key_redefinition(false);
 				} /* if */ 
 			}
 			break;
@@ -2227,6 +2254,11 @@ void GameCycle(BYTE *screen,int dx,int dy)
 			} /* if */ 
 			break;
 
+		case 20:
+			/* OPCIONES (desde la pantalla de titulo): */ 
+			OptionsCycle(screen,dx,dy,keyboard);
+			break;
+
 		case 19:
 			/* MENU DE OPCIONES: */ 
 			{
@@ -2240,9 +2272,9 @@ void GameCycle(BYTE *screen,int dx,int dy)
 
 				tile_print("OPTIONS MENU",TILE_SIZE_X*14,TILE_SIZE_Y*2,screen,dx,dy);
 				tile_print("QUIT GAME",TILE_SIZE_X*15,TILE_SIZE_Y*5,screen,dx,dy);
-				sprintf(tmp,"MUSIC VOLUME: %.3i",(100*music_volume)/127);
+				sprintf(tmp,"MUSIC VOLUME: %.3i",(100*music_volume+63)/127);
 				tile_print(tmp,TILE_SIZE_X*11,TILE_SIZE_Y*7,screen,dx,dy);
-				sprintf(tmp,"SFX VOLUME: %.3i",(100*sfx_volume)/127);
+				sprintf(tmp,"SFX VOLUME: %.3i",(100*sfx_volume+63)/127);
 				tile_print(tmp,TILE_SIZE_X*12,TILE_SIZE_Y*9,screen,dx,dy);
 
 				if (map==0) sprintf(tmp,"CASTLE    %s%i",letter[map_x],map_y+1);

@@ -66,6 +66,10 @@ int main(int argc, char** argv)
     bool quit = false;
 	bool redraw;
 
+	/* The video settings in MoG.cfg are needed to open the window: */ 
+	init_paths();
+	cargar_configuracion("MoG.cfg");
+
 	screen = initializeSDL();
 
 	if (screen == 0) {
@@ -95,8 +99,8 @@ int main(int argc, char** argv)
 										
 
                     if (event.key.scancode == SDL_SCANCODE_RETURN && IsAltPressed2()) {
-						fullscreen = !fullscreen;
-						video_set_fullscreen(fullscreen);
+						video_set_fullscreen(!video_get_fullscreen());
+						guardar_configuracion("MoG.cfg");
                     }
 				
 					// Change graphic set with either F10 or 9

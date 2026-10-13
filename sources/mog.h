@@ -242,6 +242,12 @@ bool iswall(int x,int y);
 bool iswall_or_blockingobject(int x,int y);
 
 void guardar_configuracion(char *filename);
+
+/* options.cpp: */
+void start_options(void);
+void OptionsCycle(BYTE *screen,int dx,int dy,unsigned char *keyboard);
+void start_key_redefinition(int return_state);
+void end_key_redefinition(bool cancel);
 bool cargar_configuracion(char *filename);
 void configuracion_por_defecto(void);
 
