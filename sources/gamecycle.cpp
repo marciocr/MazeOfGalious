@@ -5,7 +5,6 @@
 #include <ctype.h>
 #include <SDL3/SDL.h>
 #include "keyboardstate.h"
-#include <SDL3_image/SDL_image.h>
 #include "sound.h"
 #include "MOGtypes.h"
 
@@ -21,7 +20,6 @@
 /* Paths: */ 
 
 
-#ifndef _WIN32
 #ifndef HAVE_STRUPR
 
 char *strupr (char *str)
@@ -38,7 +36,6 @@ char *strupr (char *str)
 }
 
 
-#endif
 #endif
 
 extern char **g_paths;
@@ -1304,7 +1301,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				} /* if */ 
 
 				tile_print("TO GO TO THE TITLE SCREEN PRESS:  ESC",TILE_SIZE_X*2,TILE_SIZE_Y*18,screen,dx,dy);
-				tile_print("TO EXIT THE GAME PRESS:   F12/APPLE+Q",TILE_SIZE_X*2,TILE_SIZE_Y*19,screen,dx,dy);
+				tile_print("TO EXIT THE GAME PRESS:           F12",TILE_SIZE_X*2,TILE_SIZE_Y*19,screen,dx,dy);
 				tile_print("TO CHANGE THE ZOOM:         PGUP:PGDN",TILE_SIZE_X*2,TILE_SIZE_Y*20,screen,dx,dy);
 
 				found=false;

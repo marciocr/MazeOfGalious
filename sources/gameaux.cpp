@@ -4,7 +4,7 @@
 #include "string.h"
 #include <SDL3/SDL.h>
 #include "keyboardstate.h"
-#include <SDL3_image/SDL_image.h>
+#include "loadpcx.h"
 #include "sound.h"
 #include "MOGtypes.h"
 
@@ -2970,22 +2970,15 @@ bool iswall_or_blockingobject(int x,int y)
 void get_palette(void)
 {
 	char tmp[256];
-	/* Get the palette: */ 
-	SDL_Surface *img=0;
+	SDL_Color colors[256];
 
+	/* Get the palette: */ 
 	sprintf(tmp,"%skonami.pcx",g_path);
-	img = IMG_Load(tmp);
-	if (img!=0) {
-		SDL_SetPaletteColors(SDL_GetSurfacePalette(screen), SDL_GetSurfacePalette(img)->colors, 0, SDL_GetSurfacePalette(img)->ncolors);
-		SDL_DestroySurface(img);
-	} else {
+	if (!pcx_load_palette(tmp,colors)) {
 		sprintf(tmp,"%skonami.pcx",default_g_path);
-		img = IMG_Load(tmp);
-		if (img!=0) {
-			SDL_SetPaletteColors(SDL_GetSurfacePalette(screen), SDL_GetSurfacePalette(img)->colors, 0, SDL_GetSurfacePalette(img)->ncolors);
-			SDL_DestroySurface(img);
-		} /* if */ 
+		if (!pcx_load_palette(tmp,colors)) return;
 	} /* if */ 
+	SDL_SetPaletteColors(SDL_GetSurfacePalette(screen),colors,0,256);
 } /* get_palette */ 
 
 

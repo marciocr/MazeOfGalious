@@ -33,7 +33,6 @@ set(SHARED_SOURCES
 	sources/passwords.cpp
 	sources/path.cpp
 	sources/render.cpp
-	sources/resource.h
 	sources/roomchange.cpp
 	sources/shrines.cpp
 	sources/sound.cpp
@@ -48,11 +47,10 @@ find_package(PkgConfig REQUIRED)
 find_package(OpenGL REQUIRED)
 pkg_check_modules(SDL3 REQUIRED IMPORTED_TARGET sdl3)
 pkg_check_modules(SDL3_MIXER REQUIRED IMPORTED_TARGET sdl3-mixer)
-pkg_check_modules(SDL3_IMAGE REQUIRED IMPORTED_TARGET sdl3-image)
 
 add_executable(MazeOfGalious ${SHARED_SOURCES})
 target_compile_definitions(MazeOfGalious PRIVATE MOG_VERSION_STRING="Maze of Galious v${MOG_VERSION}")
 
-target_link_libraries(MazeOfGalious PkgConfig::SDL3 PkgConfig::SDL3_MIXER PkgConfig::SDL3_IMAGE OpenGL::GL)
+target_link_libraries(MazeOfGalious PkgConfig::SDL3 PkgConfig::SDL3_MIXER OpenGL::GL)
 
 source_group("shared" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/sources/.+")
