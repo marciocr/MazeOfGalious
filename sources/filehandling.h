@@ -5,7 +5,8 @@
 #include <sys/types.h>
 
 #define STRLEN 512
-#define GAMENAME "mog"
+#define GAMENAME "mog"			/* old user directory: $HOME/.mog */
+#define USERDATA_DIR "mazeofgalious"	/* under $XDG_DATA_HOME */
 
 enum filetype { GAMEDATA, USERDATA };
 

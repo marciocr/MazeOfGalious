@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.marciocr.MazeOfGalious</id>
+  <name>Maze of Galious</name>
+  <summary>Remake of Konami's MSX platformer The Maze of Galious</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-only</project_license>
+  <description>
+    <p>
+      Maze of Galious Remake is an unofficial, not-for-profit remake of
+      Konami's The Maze of Galious (Knightmare II), released in 1987 for the
+      MSX. Guide Popolon and Aphrodite through the castle and its ten worlds,
+      defeat the demons and rescue their child. Made by Brain Games, with
+      several graphic and sound sets to choose from.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.marciocr.MazeOfGalious.desktop</launchable>
+  <url type="homepage">https://github.com/marciocr/MazeOfGalious</url>
+  <developer id="io.github.marciocr">
+    <name>Marcio Carneiro Rodrigues</name>
+  </developer>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">mild</content_attribute>
+    <content_attribute id="violence-fantasy">mild</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="1.0.0" date="2026-10-13">
+      <description>
+        <p>SDL3 port of the Maze of Galious remake (v0.63), packaged for Linux.</p>
+        <ul>
+          <li>New OPTIONS menu on the title screen: music and effects volume, fullscreen, window size, filter and controls</li>
+          <li>Gamepad support with hot-plug; gamepads also navigate the menus</li>
+          <li>Upscaling filters: Scale2x, 2xSaI, hq2x, xBR, OmniScale and Lanczos</li>
+          <li>Resizable window with a 4:3 picture</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+</component>

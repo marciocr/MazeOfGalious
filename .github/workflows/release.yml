@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  flatpak:
+    name: Flatpak bundle
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v7
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: mazeofgalious.flatpak
+          manifest-path: io.github.marciocr.MazeOfGalious.yml
+          cache: true
+
+  appimage-targz:
+    name: AppImage + tar.gz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential pkg-config git \
+            libasound2-dev libpulse-dev libaudio-dev libfribidi-dev libjack-dev \
+            libsndio-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
+            libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev \
+            libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
+            libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev
+
+      # SDL3 isn't packaged by Ubuntu yet, so it's built from source, pinned to
+      # the same tags as the Flatpak manifest (io.github.marciocr.MazeOfGalious.yml)
+      # for consistency between the distribution formats. The submodules hold
+      # SDL_mixer's vendored codecs; a shallow clone doesn't fetch them.
+      - name: Build SDL3 from source
+        run: |
+          PREFIX="$HOME/sdl3-prefix"
+          mkdir -p "$PREFIX"
+          build_cmake_dep() {
+            local url=$1 tag=$2 name=$3; shift 3
+            git clone --depth 1 --branch "$tag" "$url" "/tmp/$name"
+            git -C "/tmp/$name" submodule update --init --depth 1
+            cmake -S "/tmp/$name" -B "/tmp/$name/build" -GNinja \
+              -DCMAKE_INSTALL_PREFIX="$PREFIX" -DCMAKE_BUILD_TYPE=Release "$@"
+            cmake --build "/tmp/$name/build"
+            cmake --install "/tmp/$name/build"
+          }
+          build_cmake_dep https://github.com/libsdl-org/SDL.git release-3.4.14 SDL3 \
+            -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TEST_LIBRARY=OFF
+          build_cmake_dep https://github.com/libsdl-org/SDL_mixer.git release-3.2.4 SDL3_mixer \
+            -DBUILD_SHARED_LIBS=ON -DSDLMIXER_VENDORED=ON -DSDLMIXER_EXAMPLES=OFF \
+            -DSDLMIXER_TESTS=OFF -DSDLMIXER_MP3=OFF -DSDLMIXER_FLAC=OFF -DSDLMIXER_MOD=OFF \
+            -DSDLMIXER_MIDI=OFF -DSDLMIXER_OPUS=OFF -DSDLMIXER_WAVPACK=OFF -DSDLMIXER_GME=OFF \
+            -DCMAKE_PREFIX_PATH="$PREFIX"
+          echo "SDL3_PREFIX=$PREFIX" >> "$GITHUB_ENV"
+
+      - name: Build Maze of Galious
+        run: |
+          export PKG_CONFIG_PATH="$SDL3_PREFIX/lib/pkgconfig:$SDL3_PREFIX/lib64/pkgconfig"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: Assemble AppDir
+        run: |
+          APPDIR="$PWD/AppDir"
+          mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/lib"
+          cp build/MazeOfGalious "$APPDIR/usr/bin/MazeOfGalious"
+          cp -r graphics rooms shaders sound readme.txt "$APPDIR/usr/bin/"
+          cp -P "$SDL3_PREFIX"/lib/libSDL3*.so* "$APPDIR/usr/lib/"
+          install -Dm644 packaging/mog-icon.png "$APPDIR/usr/share/icons/hicolor/48x48/apps/io.github.marciocr.MazeOfGalious.png"
+          install -Dm644 io.github.marciocr.MazeOfGalious.desktop "$APPDIR/usr/share/applications/io.github.marciocr.MazeOfGalious.desktop"
+          cp packaging/mog-icon.png "$APPDIR/io.github.marciocr.MazeOfGalious.png"
+          cp io.github.marciocr.MazeOfGalious.desktop "$APPDIR/io.github.marciocr.MazeOfGalious.desktop"
+          install -Dm755 packaging/AppRun "$APPDIR/AppRun"
+
+      - name: Build AppImage
+        run: |
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir mazeofgalious-x86_64.AppImage
+
+      - name: Build tar.gz
+        run: |
+          PKGDIR=mazeofgalious-linux-x86_64
+          mkdir -p "$PKGDIR"
+          cp -r build/MazeOfGalious graphics rooms shaders sound readme.txt LICENSE "$PKGDIR"/
+          cp -L "$SDL3_PREFIX"/lib/libSDL3*.so.0 "$PKGDIR"/
+          install -Dm755 packaging/mazeofgalious.sh "$PKGDIR/mazeofgalious.sh"
+          tar czf mazeofgalious-linux-x86_64.tar.gz "$PKGDIR"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: appimage-targz
+          path: |
+            mazeofgalious-x86_64.AppImage
+            mazeofgalious-linux-x86_64.tar.gz
+
+  release:
+    name: Publish release
+    needs: [flatpak, appimage-targz]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            dist/mazeofgalious.flatpak
+            dist/mazeofgalious-x86_64.AppImage
+            dist/mazeofgalious-linux-x86_64.tar.gz
