@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Maze of Galious
+Comment=Remake of Konami's MSX platformer The Maze of Galious
+Exec=mazeofgalious
+Icon=io.github.marciocr.MazeOfGalious
+Categories=Game;ArcadeGame;
+Terminal=false

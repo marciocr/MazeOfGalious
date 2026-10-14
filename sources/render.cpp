@@ -1,7 +1,8 @@
 #include "string.h"
 #include "math.h"
 #include "MOGtypes.h"
-#include "SDL.h"
+#include <SDL3/SDL.h>
+#include "keyboardstate.h"
 
 #include "drawing.h"
 #include "bitmaps.h"

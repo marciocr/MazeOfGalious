@@ -1,8 +1,8 @@
 #include "math.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "SDL.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include "keyboardstate.h"
 #include "sound.h"
 #include "MOGtypes.h"
 

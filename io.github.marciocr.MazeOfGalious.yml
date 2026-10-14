@@ -1,0 +1,78 @@
+app-id: io.github.marciocr.MazeOfGalious
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: mazeofgalious
+
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+  # Gamepad support (SDL3): the Flatpak sandbox does not expose /dev/input
+  # by default, and there's no portal for raw joystick/gamepad access, so
+  # SDL's Linux joystick backend can't see any controller without this.
+  # --device=input (Flatpak >= 1.15.6) grants just /dev/input.
+  - --device=input
+
+modules:
+  - name: SDL3
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DSDL_SHARED=ON
+      - -DSDL_STATIC=OFF
+      - -DSDL_TEST_LIBRARY=OFF
+    sources:
+      - type: git
+        url: https://github.com/libsdl-org/SDL.git
+        tag: release-3.4.14
+
+  # The game only plays .ogg and .wav files.
+  - name: SDL3_mixer
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+      - -DSDLMIXER_VENDORED=ON
+      - -DSDLMIXER_EXAMPLES=OFF
+      - -DSDLMIXER_TESTS=OFF
+      - -DSDLMIXER_MP3=OFF
+      - -DSDLMIXER_FLAC=OFF
+      - -DSDLMIXER_MOD=OFF
+      - -DSDLMIXER_MIDI=OFF
+      - -DSDLMIXER_OPUS=OFF
+      - -DSDLMIXER_WAVPACK=OFF
+      - -DSDLMIXER_GME=OFF
+    sources:
+      - type: git
+        url: https://github.com/libsdl-org/SDL_mixer.git
+        tag: release-3.2.4
+
+  - name: mazeofgalious
+    buildsystem: simple
+    build-commands:
+      - cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - cmake --build build
+      - install -Dm755 build/MazeOfGalious /app/bin/MazeOfGalious
+      - install -d /app/bin/graphics /app/bin/rooms /app/bin/shaders /app/bin/sound
+      - cp -r graphics/. /app/bin/graphics/
+      - cp -r rooms/. /app/bin/rooms/
+      - cp -r shaders/. /app/bin/shaders/
+      - cp -r sound/. /app/bin/sound/
+      - install -Dm644 readme.txt /app/bin/readme.txt
+      - install -Dm755 mazeofgalious-wrapper.sh /app/bin/mazeofgalious
+      - install -Dm644 io.github.marciocr.MazeOfGalious.desktop /app/share/applications/io.github.marciocr.MazeOfGalious.desktop
+      - install -Dm644 io.github.marciocr.MazeOfGalious.metainfo.xml /app/share/metainfo/io.github.marciocr.MazeOfGalious.metainfo.xml
+      - install -Dm644 packaging/mog-icon.png /app/share/icons/hicolor/48x48/apps/io.github.marciocr.MazeOfGalious.png
+    sources:
+      - type: dir
+        path: .
+        skip:
+          - build-dir
+          - .flatpak-builder
+          - repo
+      - type: script
+        dest-filename: mazeofgalious-wrapper.sh
+        commands:
+          - "#!/bin/sh"
+          - cd /app/bin
+          - exec /app/bin/MazeOfGalious "$@"

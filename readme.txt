@@ -1,30 +1,48 @@
 MAZE OF GALIOUS REMAKE v0.63
 Santi Ontañón Villar
 
-Note: This is a modification of the original version with updates to build/run on modern versions of macOS.
+Note: this is a port of the original version to SDL3, for Linux x86_64.
+Releases (Flatpak, AppImage and tar.gz) are published at
+https://github.com/marciocr/MazeOfGalious/releases
 
-To build, use Homebrew to install the following libraries and tools:
+To build it, install CMake, pkg-config, SDL3 and SDL3_mixer (3.x), then:
 
-$ brew bundle
+$ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build
+$ ./build/MazeOfGalious
 
-Then run:
+The game must be started from this folder (it reads graphics/, rooms/,
+shaders/ and sound/ from the current directory). Settings and saved games
+go to ~/.local/share/mazeofgalious/ (older versions used ~/.mog/, which is
+still read).
 
-$ cmake .
+TITLE SCREEN: PLAY START, PASSWORD (to continue a saved game; L is a
+shortcut) and OPTIONS (O is a shortcut). In the password screen, letters
+and digits are typed, or changed with UP/DOWN; F5 to F9 load the passwords
+saved at DEMETER's shrine.
 
-$ make
+OPTIONS:
+- AUDIO: music and effects volume, sound set.
+- VIDEO: graphic set, fullscreen, window size and upscaling filter
+  (Scale2x, 2xSaI, hq2x, xBR, OmniScale, Lanczos).
+- CONTROLS: gamepad 1-4 or keyboard only, and key redefinition.
 
-KEYS:
+GAMEPAD: D-pad or left stick - move, A - sword, B - secondary weapon,
+X - jump, Y - item screen, START - pause, BACK - options menu.
+In the menus: A/START - select, B/BACK - go back.
 
-Q - UP/JUMP
-A - DOWN
-O - LEFT
-P - RIGHT
+KEYS (default, can be redefined):
+
+UP ARROW - UP/JUMP
+DOWN ARROW - DOWN
+LEFT ARROW - LEFT
+RIGHT ARROW - RIGHT
 SPACE - SWORD
 M - FIRE SECONDARY WEAPON
 F1 - ITEM SCREEN
 F2 - PAUSE
 
-ESC - Returns to the tittle screen (NOT REDEFINABLE)
+ESC - Options menu, to quit to the title screen (NOT REDEFINABLE)
 F10 - Changes the Graphic set (NOT REDEFINABLE)
 F11 - Changes the Sound set (NOT REDEFINABLE)
 F12 - Quits the game (NOT REDEFINABLE)
