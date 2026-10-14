@@ -243,6 +243,10 @@ bool iswall_or_blockingobject(int x,int y);
 
 void guardar_configuracion(char *filename);
 
+/* main.cpp: graphic/sound set, step 1 = next, -1 = previous: */
+void change_graphic_set(int step);
+void change_sound_set(int step);
+
 /* options.cpp: */
 void start_options(void);
 void OptionsCycle(BYTE *screen,int dx,int dy,unsigned char *keyboard);

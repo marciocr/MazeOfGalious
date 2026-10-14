@@ -193,6 +193,13 @@ void keyboard_update_gamepads(void)
 			keys[SDL_SCANCODE_RETURN]|=confirm;
 			keys[SWORD_KEY]|=confirm;
 			keys[SDL_SCANCODE_ESCAPE]|=back;
+		} else if (context==KEYBOARD_CONTEXT_TEXT) {
+			keys[SDL_SCANCODE_LEFT]|=in[PAD_LEFT];
+			keys[SDL_SCANCODE_RIGHT]|=in[PAD_RIGHT];
+			keys[SDL_SCANCODE_UP]|=in[PAD_UP];
+			keys[SDL_SCANCODE_DOWN]|=in[PAD_DOWN];
+			keys[SDL_SCANCODE_RETURN]|=in[PAD_A] | in[PAD_START];
+			keys[SDL_SCANCODE_ESCAPE]|=in[PAD_B] | in[PAD_BACK];
 		} else if (context==KEYBOARD_CONTEXT_GAME && i==gamepad_device) {
 			keys[LEFT_KEY]|=in[PAD_LEFT];
 			keys[RIGHT_KEY]|=in[PAD_RIGHT];

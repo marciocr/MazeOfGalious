@@ -54,7 +54,7 @@ BYTE *col_buffer=0;
 
 /* Estado: */ 
 int STATE=0,SUBSTATE=0,OLDSTATE=0,MENUOPTION=0;
-static int title_option=0;	/* 0 = PLAY START, 1 = OPTIONS */ 
+static int title_option=0;	/* 0 = PLAY START, 1 = PASSWORD, 2 = OPTIONS */ 
 int cycle=0;
 
 /* Developers variables: */ 
@@ -366,54 +366,64 @@ void GameCycle(BYTE *screen,int dx,int dy)
 			menu_bmp->draw(0,0,dx,dy,screen,dx,dy,dx);
 			B_rectangle(screen,TILE_SIZE_X*13,TILE_SIZE_Y*(19+title_option),TILE_SIZE_X*14,TILE_SIZE_Y,dx,47);
 			tile_print("PLAY START",TILE_SIZE_X*15,TILE_SIZE_Y*19,screen,dx,dy);
-			tile_print("OPTIONS",TILE_SIZE_X*16,TILE_SIZE_Y*20,screen,dx,dy);
+			tile_print("PASSWORD",TILE_SIZE_X*16,TILE_SIZE_Y*20,screen,dx,dy);
+			tile_print("OPTIONS",TILE_SIZE_X*16,TILE_SIZE_Y*21,screen,dx,dy);
 
 			sprintf(tmp,"F10 OR 9 CHANGES GRAPHIC SET: %s",g_path+9);
 			tmp[strlen(tmp)-1]=0;
 			strupr(tmp);
-			tile_print(tmp,TILE_SIZE_X*2,TILE_SIZE_Y*21,screen,dx,dy);
+			tile_print(tmp,TILE_SIZE_X*2,TILE_SIZE_Y*23,screen,dx,dy);
 			sprintf(tmp,"F11 OR 0 CHANGES SOUND SET: %s",s_path+6);
 			strupr(tmp);
 			tmp[strlen(tmp)-1]=0;
-			tile_print(tmp,TILE_SIZE_X*2,TILE_SIZE_Y*22,screen,dx,dy);
-			tile_print("O: OPTIONS   K: REDEFINE THE KEYS",TILE_SIZE_X*3,TILE_SIZE_Y*23,screen,dx,dy);
+			tile_print(tmp,TILE_SIZE_X*2,TILE_SIZE_Y*24,screen,dx,dy);
 
-			if ((keyboard[SDL_SCANCODE_UP] && !old_keyboard[SDL_SCANCODE_UP]) ||
-				(keyboard[SDL_SCANCODE_DOWN] && !old_keyboard[SDL_SCANCODE_DOWN])) {
-				title_option=1-title_option;
+			/* Menu: PLAY START / PASSWORD / OPTIONS (also L, O and K, the
+			   key redefinition, as shortcuts). */ 
+			if (keyboard[SDL_SCANCODE_UP] && !old_keyboard[SDL_SCANCODE_UP] && title_option>0) {
+				title_option--;
 				Sound_play(S_select);
 				SUBSTATE=0;
 			} /* if */ 
-			if (((keyboard[SDL_SCANCODE_SPACE] && !old_keyboard[SDL_SCANCODE_SPACE]) ||
-				 (keyboard[SDL_SCANCODE_RETURN] && !old_keyboard[SDL_SCANCODE_RETURN])) && title_option==1) {
-				start_options();
-				break;
-			} /* if */ 
-			if (keyboard[SDL_SCANCODE_O] && !old_keyboard[SDL_SCANCODE_O]) {
-				title_option=1;
-				start_options();
-				break;
-			} /* if */ 
-
-			if ((keyboard[SDL_SCANCODE_SPACE] && !old_keyboard[SDL_SCANCODE_SPACE]) ||
-				(keyboard[SDL_SCANCODE_RETURN] && !old_keyboard[SDL_SCANCODE_RETURN])) {
-				developer_start_x=-1;
-				developer_start_y=-1;
-				developer_start_map=-1;
-				strcpy(password,"UR3FUR3FUR4F423RUR3FUR3FUR3FUR3FUR3FUR3FURS48");
-				STATE=3;
+			if (keyboard[SDL_SCANCODE_DOWN] && !old_keyboard[SDL_SCANCODE_DOWN] && title_option<2) {
+				title_option++;
+				Sound_play(S_select);
 				SUBSTATE=0;
 			} /* if */ 
+			{
+				int option=-1;
+
+				if ((keyboard[SDL_SCANCODE_SPACE] && !old_keyboard[SDL_SCANCODE_SPACE]) ||
+					(keyboard[SDL_SCANCODE_RETURN] && !old_keyboard[SDL_SCANCODE_RETURN])) option=title_option;
+				if (keyboard[SDL_SCANCODE_L] && !old_keyboard[SDL_SCANCODE_L]) option=1;
+				if (keyboard[SDL_SCANCODE_O] && !old_keyboard[SDL_SCANCODE_O]) option=2;
+				if (option>=0) title_option=option;
+
+				if (option==0) {
+					developer_start_x=-1;
+					developer_start_y=-1;
+					developer_start_map=-1;
+					strcpy(password,"UR3FUR3FUR4F423RUR3FUR3FUR3FUR3FUR3FUR3FURS48");
+					STATE=3;
+					SUBSTATE=0;
+					break;
+				} /* if */ 
+				if (option==1) {
+					int i;
+
+					for(i=0;i<45;i++) password[i]=' ';
+					password_pos=0;
+					STATE=14;
+					SUBSTATE=0;
+					break;
+				} /* if */ 
+				if (option==2) {
+					start_options();
+					break;
+				} /* if */ 
+			}
 			if (keyboard[SDL_SCANCODE_K] && !old_keyboard[SDL_SCANCODE_K]) {
 				start_key_redefinition(2);
-			} /* if */ 
-			if (keyboard[SDL_SCANCODE_L] && !old_keyboard[SDL_SCANCODE_L]) {
-				int i;
-
-				for(i=0;i<45;i++) password[i]=' ';
-				password_pos=0;
-				STATE=14;
-				SUBSTATE=0;
 			} /* if */ 
 
 			if (keyboard[SDL_SCANCODE_G] && !old_keyboard[SDL_SCANCODE_G]) {
@@ -1658,6 +1668,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				int ypos[3]={8,10,12};
 				int xpos[16]={10,11,12,13,15,16,17,18,20,21,22,23,25,26,27,28};
 				int x,y;
+				int old_substate=SUBSTATE;	/* the RETURN that rejects a code doesn't also close the message */ 
 
 				/* Entrando código!!!!: */ 
 				memset(screen,0,dx*dy);
@@ -1666,6 +1677,8 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				tile_print("ENTER THE SECRET",TILE_SIZE_X*9,TILE_SIZE_Y*4,screen,dx,dy);
 				tile_print("CODE AND PRESS",TILE_SIZE_X*9,TILE_SIZE_Y*5,screen,dx,dy);
 				tile_print("RETURN KEY.",TILE_SIZE_X*9,TILE_SIZE_Y*6,screen,dx,dy);
+				tile_print("UP:DOWN CHANGE   LEFT:RIGHT MOVE",TILE_SIZE_X*4,TILE_SIZE_Y*23,screen,dx,dy);
+				tile_print("ESC BACK",TILE_SIZE_X*16,TILE_SIZE_Y*24,screen,dx,dy);
 
 				buf[0]=password[0]; buf[1]=password[1]; buf[2]=password[2]; buf[3]=password[3];
 				buf[5]=password[4]; buf[6]=password[5]; buf[7]=password[6]; buf[8]=password[7];
@@ -1720,8 +1733,21 @@ void GameCycle(BYTE *screen,int dx,int dy)
 					} /* if */ 
 
 					if (!old_keyboard[SDL_SCANCODE_ESCAPE] && keyboard[SDL_SCANCODE_ESCAPE]) {
-						STATE=0;
+						STATE=2;
 						SUBSTATE=0;
+					} /* if */ 
+
+					/* Up/down change the character under the cursor (so a
+					   gamepad can enter a password too): */ 
+					if ((!old_keyboard[SDL_SCANCODE_UP] && keyboard[SDL_SCANCODE_UP]) ||
+						(!old_keyboard[SDL_SCANCODE_DOWN] && keyboard[SDL_SCANCODE_DOWN])) {
+						const char *chars=" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+						int n=(int)strlen(chars);
+						const char *c=strchr(chars,password[password_pos]);
+						int k=(c!=0 && password[password_pos]!=0 ? (int)(c-chars):0);
+
+						k=(k+(keyboard[SDL_SCANCODE_UP] ? 1:n-1))%n;
+						password[password_pos]=chars[k];
 					} /* if */ 
 
 					if (!old_keyboard[SDL_SCANCODE_RETURN] && keyboard[SDL_SCANCODE_RETURN]) {
@@ -1881,7 +1907,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				if (SUBSTATE==1) {
 					tile_print("THAT IS THE WRONG",TILE_SIZE_X*9,TILE_SIZE_Y*17,screen,dx,dy);
 					tile_print("CODE",TILE_SIZE_X*9,TILE_SIZE_Y*19,screen,dx,dy);
-					if (!old_keyboard[SDL_SCANCODE_RETURN] && keyboard[SDL_SCANCODE_RETURN]) SUBSTATE=0;
+					if (old_substate==1 && !old_keyboard[SDL_SCANCODE_RETURN] && keyboard[SDL_SCANCODE_RETURN]) SUBSTATE=0;
 				} /* if */ 
 				if (SUBSTATE>=2) {
 					tile_print("MY MEMORY HAS BEEN",TILE_SIZE_X*9,TILE_SIZE_Y*17,screen,dx,dy);
@@ -2364,8 +2390,11 @@ void GameCycle(BYTE *screen,int dx,int dy)
 	case 11: case 12: case 13: case 16:
 		keyboard_set_context(KEYBOARD_CONTEXT_GAME);
 		break;
-	case 10: case 14: case 15:
+	case 10: case 15:
 		keyboard_set_context(KEYBOARD_CONTEXT_NONE);
+		break;
+	case 14:
+		keyboard_set_context(KEYBOARD_CONTEXT_TEXT);
 		break;
 	case 19:
 		keyboard_set_context(KEYBOARD_CONTEXT_GAME_MENU);

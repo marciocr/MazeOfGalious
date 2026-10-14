@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "string.h"
+#include "ctype.h"
 #include <SDL3/SDL.h>
 #include "keyboardstate.h"
 #include "sound.h"
@@ -21,6 +22,7 @@ extern SDL_Scancode UP_KEY,DOWN_KEY,LEFT_KEY,RIGHT_KEY;
 extern SDL_Scancode SWORD_KEY,WEAPON_KEY,ITEM_KEY,PAUSE_KEY;
 extern int music_volume,sfx_volume;
 extern SOUNDT S_select;
+extern char *g_path,*s_path;
 
 enum {PAGE_MAIN, PAGE_AUDIO, PAGE_VIDEO, PAGE_CONTROLS};
 
@@ -75,12 +77,24 @@ static int n_items(void)
 {
 	switch(page) {
 	case PAGE_MAIN: return 4;		/* AUDIO, VIDEO, CONTROLS, BACK */
-	case PAGE_AUDIO: return 3;		/* MUSIC, SFX, BACK */
-	case PAGE_VIDEO: return 4;		/* FULLSCREEN, WINDOW SIZE, FILTER, BACK */
+	case PAGE_AUDIO: return 4;		/* MUSIC, SFX, SOUND SET, BACK */
+	case PAGE_VIDEO: return 5;		/* GRAPHICS, FULLSCREEN, WINDOW SIZE, FILTER, BACK */
 	case PAGE_CONTROLS: return 3;	/* DEVICE, REDEFINE KEYS, BACK */
 	} /* switch */
 	return 1;
 } /* n_items */
+
+
+/* "graphics/naramura/" -> "NARAMURA" */
+static void set_name(const char *path,char *buf)
+{
+	const char *name=strchr(path,'/');
+	int i;
+
+	name=(name!=0 ? name+1:path);
+	for(i=0;name[i]!=0 && name[i]!='/' && i<20;i++) buf[i]=toupper(name[i]);
+	buf[i]=0;
+} /* set_name */
 
 
 static void device_name(int device,char *buf)
@@ -211,13 +225,20 @@ void OptionsCycle(BYTE *screen,int dx,int dy,unsigned char *keyboard)
 			SetSFXVolume(sfx_volume);
 			Sound_play(S_select);
 		} /* if */
+		if (selected==2 && (change!=0 || confirm) && hold_cycles<=1) {
+			change_sound_set(change<0 ? -1:1);
+			Sound_play(S_select);
+		} /* if */
 		break;
 
 	case PAGE_VIDEO:
-		if (selected==0 && (confirm || (change!=0 && hold_cycles==1))) {
+		if (selected==0 && (change!=0 || confirm) && hold_cycles<=1) {
+			change_graphic_set(change<0 ? -1:1);
+		} /* if */
+		if (selected==1 && (confirm || (change!=0 && hold_cycles==1))) {
 			video_set_fullscreen(!video_get_fullscreen());
 		} /* if */
-		if (selected==1 && (change!=0 || confirm) && hold_cycles<=1) {
+		if (selected==2 && (change!=0 || confirm) && hold_cycles<=1) {
 			int scale=video_get_window_scale()+(change<0 ? -1:1);
 			int max_scale=video_max_window_scale();
 
@@ -225,7 +246,7 @@ void OptionsCycle(BYTE *screen,int dx,int dy,unsigned char *keyboard)
 			if (scale>max_scale) scale=1;
 			video_set_window_scale(scale);
 		} /* if */
-		if (selected==2 && (change!=0 || confirm) && hold_cycles<=1) {
+		if (selected==3 && (change!=0 || confirm) && hold_cycles<=1) {
 			int filter=video_get_filter()+(change<0 ? -1:1);
 
 			if (filter<0) filter=N_FILTERS-1;
@@ -265,18 +286,24 @@ void OptionsCycle(BYTE *screen,int dx,int dy,unsigned char *keyboard)
 		item(tmp,7,0,screen,dx,dy);
 		sprintf(tmp,"SFX VOLUME:        %3i",volume_percent(sfx_volume));
 		item(tmp,9,1,screen,dx,dy);
-		item("BACK",14,2,screen,dx,dy);
+		set_name(s_path,tmp2);
+		sprintf(tmp,"SOUND SET:         %s",tmp2);
+		item(tmp,11,2,screen,dx,dy);
+		item("BACK",14,3,screen,dx,dy);
 		break;
 
 	case PAGE_VIDEO:
 		centered("VIDEO",3,screen,dx,dy);
+		set_name(g_path,tmp2);
+		sprintf(tmp,"GRAPHICS:          %s",tmp2);
+		item(tmp,6,0,screen,dx,dy);
 		sprintf(tmp,"FULLSCREEN:        %s",video_get_fullscreen() ? "ON":"OFF");
-		item(tmp,7,0,screen,dx,dy);
+		item(tmp,8,1,screen,dx,dy);
 		sprintf(tmp,"WINDOW SIZE:       %iX",video_get_window_scale());
-		item(tmp,9,1,screen,dx,dy);
+		item(tmp,10,2,screen,dx,dy);
 		sprintf(tmp,"FILTER:            %s",postfx_filter_name(video_get_filter()));
-		item(tmp,11,2,screen,dx,dy);
-		item("BACK",14,3,screen,dx,dy);
+		item(tmp,12,3,screen,dx,dy);
+		item("BACK",15,4,screen,dx,dy);
 		break;
 
 	case PAGE_CONTROLS:

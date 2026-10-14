@@ -28,7 +28,8 @@
       <description>
         <p>SDL3 port of the Maze of Galious remake v0.63, packaged for Linux.</p>
         <ul>
-          <li>New OPTIONS menu on the title screen: music and effects volume, fullscreen, window size, filter and controls</li>
+          <li>Title screen menu: PLAY START, PASSWORD (continue a saved game, also with a gamepad) and OPTIONS</li>
+          <li>OPTIONS menu: music and effects volume, sound set, graphic set, fullscreen, window size, filter and controls</li>
           <li>Gamepad support with hot-plug; gamepads also navigate the menus</li>
           <li>Upscaling filters: Scale2x, 2xSaI, hq2x, xBR, OmniScale and Lanczos</li>
           <li>Resizable window with a 4:3 picture</li>

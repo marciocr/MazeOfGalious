@@ -16,10 +16,15 @@ shaders/ and sound/ from the current directory). Settings and saved games
 go to ~/.local/share/mazeofgalious/ (older versions used ~/.mog/, which is
 still read).
 
-OPTIONS (in the title screen, or press O there):
-- AUDIO: music and effects volume.
-- VIDEO: fullscreen, window size and upscaling filter (Scale2x, 2xSaI,
-  hq2x, xBR, OmniScale, Lanczos).
+TITLE SCREEN: PLAY START, PASSWORD (to continue a saved game; L is a
+shortcut) and OPTIONS (O is a shortcut). In the password screen, letters
+and digits are typed, or changed with UP/DOWN; F5 to F9 load the passwords
+saved at DEMETER's shrine.
+
+OPTIONS:
+- AUDIO: music and effects volume, sound set.
+- VIDEO: graphic set, fullscreen, window size and upscaling filter
+  (Scale2x, 2xSaI, hq2x, xBR, OmniScale, Lanczos).
 - CONTROLS: gamepad 1-4 or keyboard only, and key redefinition.
 
 GAMEPAD: D-pad or left stick - move, A - sword, B - secondary weapon,

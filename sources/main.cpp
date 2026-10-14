@@ -57,6 +57,7 @@ SDL_Surface *screen;
 
 void Render(SDL_Surface *surface);
 SDL_Surface* initializeSDL(void);
+static bool shortcut_key(SDL_Scancode k);
 void finalizeSDL();
 
 int main(int argc, char** argv)
@@ -104,41 +105,18 @@ int main(int argc, char** argv)
 						guardar_configuracion("MoG.cfg");
                     }
 				
-					// Change graphic set with either F10 or 9
-					if (event.key.scancode == SDL_SCANCODE_F10 || event.key.scancode == SDL_SCANCODE_9) {
-
-						act_g_path++;
-						if (act_g_path >= n_g_paths) {
-							act_g_path = 0;
-						}
-						
-						g_path = g_paths[act_g_path];
-						ReleaseGraphics();
-						ReloadGraphics(SCREEN_X, SCREEN_Y);
-						guardar_configuracion("MoG.cfg");
-						
-						if (fighting_demon != 0) {
-							redo_demonintro(fighting_demon, 0, SCREEN_X, SCREEN_Y);
-						}
+					// Change graphic set with either F10 or 9, sound set with F11 or 0
+					// (see shortcut_key for 9, 0 and D)
+					if (event.key.scancode == SDL_SCANCODE_F10 ||
+						(event.key.scancode == SDL_SCANCODE_9 && shortcut_key(SDL_SCANCODE_9))) {
+						change_graphic_set(1);
 					} 
-
-					// Change sound set with either F11 or 0
-					if (event.key.scancode == SDL_SCANCODE_F11 || event.key.scancode == SDL_SCANCODE_0) {
-
-						act_s_path++;
-						if (act_s_path >= n_s_paths) {
-							act_s_path = 0;
-						}
-						
-						s_path = s_paths[act_s_path];
-						ReleaseSound(false);
-						ReloadSound();
-						music_recovery();
-						guardar_configuracion("MoG.cfg");
-						SetSFXVolume(sfx_volume);
+					if (event.key.scancode == SDL_SCANCODE_F11 ||
+						(event.key.scancode == SDL_SCANCODE_0 && shortcut_key(SDL_SCANCODE_0))) {
+						change_sound_set(1);
 					}
 
-					if (event.key.scancode == SDL_SCANCODE_D) {
+					if (event.key.scancode == SDL_SCANCODE_D && shortcut_key(SDL_SCANCODE_D)) {
 						write_debug_report("debug-report.txt");
 					} 
                     break;
@@ -200,6 +178,49 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+
+
+/* 9, 0 and D are shortcuts only when they aren't being typed (key
+   redefinition, password) or used as one of the game keys: */ 
+static bool shortcut_key(SDL_Scancode k)
+{
+	extern int STATE;
+	extern SDL_Scancode UP_KEY, DOWN_KEY, LEFT_KEY, RIGHT_KEY;
+	extern SDL_Scancode SWORD_KEY, WEAPON_KEY, ITEM_KEY, PAUSE_KEY;
+
+	if (STATE == 10 || STATE == 14) return false;
+
+	return k != UP_KEY && k != DOWN_KEY && k != LEFT_KEY && k != RIGHT_KEY &&
+		   k != SWORD_KEY && k != WEAPON_KEY && k != ITEM_KEY && k != PAUSE_KEY;
+} /* shortcut_key */ 
+
+
+/* Next (step 1) or previous (step -1) graphic set, as F10 does: */ 
+void change_graphic_set(int step)
+{
+	act_g_path = (act_g_path + step + n_g_paths) % n_g_paths;
+	g_path = g_paths[act_g_path];
+	ReleaseGraphics();
+	ReloadGraphics(SCREEN_X, SCREEN_Y);
+	guardar_configuracion("MoG.cfg");
+
+	if (fighting_demon != 0) {
+		redo_demonintro(fighting_demon, 0, SCREEN_X, SCREEN_Y);
+	}
+} /* change_graphic_set */ 
+
+
+/* Next (step 1) or previous (step -1) sound set, as F11 does: */ 
+void change_sound_set(int step)
+{
+	act_s_path = (act_s_path + step + n_s_paths) % n_s_paths;
+	s_path = s_paths[act_s_path];
+	ReleaseSound(false);
+	ReloadSound();
+	music_recovery();
+	guardar_configuracion("MoG.cfg");
+	SetSFXVolume(sfx_volume);
+} /* change_sound_set */ 
 
 
 SDL_Surface* initializeSDL(void)
