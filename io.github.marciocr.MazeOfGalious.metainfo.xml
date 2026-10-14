@@ -24,9 +24,9 @@
     <content_attribute id="violence-fantasy">mild</content_attribute>
   </content_rating>
   <releases>
-    <release version="1.0.0" date="2026-10-13">
+    <release version="0.7" date="2026-10-13">
       <description>
-        <p>SDL3 port of the Maze of Galious remake (v0.63), packaged for Linux.</p>
+        <p>SDL3 port of the Maze of Galious remake v0.63, packaged for Linux.</p>
         <ul>
           <li>New OPTIONS menu on the title screen: music and effects volume, fullscreen, window size, filter and controls</li>
           <li>Gamepad support with hot-plug; gamepads also navigate the menus</li>
