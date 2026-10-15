@@ -2790,6 +2790,20 @@ bool typed_word_p(char *word)
 } /* typed_word_p */ 
 
 
+/* Types a word as if its letters had been pressed one by one (the demon's
+   name spelled with the gamepad): */ 
+void type_word(char *word)
+{
+	int i,j;
+
+	for(i=0;word[i]!=0;i++) {
+		if (word[i]<'a' || word[i]>'z') continue;
+		for(j=15;j>0;j--) last_word[j]=last_word[j-1];
+		last_word[0]=SDL_Scancode(SDL_SCANCODE_A+(word[i]-'a'));
+	} /* for */ 
+} /* type_word */ 
+
+
 void draw_items_map(int map,int map_x,int map_y,bool selfindicator,unsigned char *screen,int dx,int dy)
 {
 	int offs[10]={3,0,2,1,0,1,1,1,2,2};

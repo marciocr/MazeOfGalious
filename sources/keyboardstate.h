@@ -14,14 +14,15 @@
 /* What the gamepads are pressing, set by the game from its current screen: */
 enum {
 	KEYBOARD_CONTEXT_NONE,	/* gamepads ignored (key redefinition) */
-	KEYBOARD_CONTEXT_TEXT,	/* typing a password: any gamepad, d-pad/stick = arrows only,
-							   A/Start = return, B/Back = escape */
+	KEYBOARD_CONTEXT_TEXT,	/* typing a password or a demon's name: any gamepad, d-pad/stick
+							   = arrows only, A/Start = return, B/Back = escape, LB/RB = tab */
 	KEYBOARD_CONTEXT_MENU,	/* any gamepad: d-pad/stick = arrows and the direction keys,
 							   A/Start = confirm (space, return, sword), B/Back = escape */
 	KEYBOARD_CONTEXT_GAME_MENU,	/* the in-game options menu: as MENU, but Start = escape
 							   (back to the game) so it can't pick QUIT GAME */
 	KEYBOARD_CONTEXT_GAME	/* the chosen gamepad: d-pad/stick = direction keys, A = sword,
-							   B = weapon, X = up (jump), Y = item, Start = pause, Back = escape */
+							   B = weapon, X = up (jump), Y = item, Start = pause, Back = escape,
+							   LB/RB = tab (spell a demon's name) */
 };
 
 unsigned char *keyboard_get_state(void);

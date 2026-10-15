@@ -262,6 +262,7 @@ void HP_add_record(int room_x,int room_y,int obj,int type);
 void clear_typed_word(void);
 void check_typed_word(void);
 bool typed_word_p(char *word);
+void type_word(char *word);
 
 void redo_demonintro(int state,unsigned char *screen,int dx,int dy);
 void demon_intro(int state,unsigned char *screen,int dx,int dy);

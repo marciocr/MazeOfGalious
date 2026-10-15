@@ -124,6 +124,11 @@ bool room_watermonster=false; /* Indica que hay monstruo en el agua.	*/
 bool room_fallingstones=false,room_rollingstones=false; /* Indica si caen piedras */ 
 int stones_counter=0;
 bool room_blobs=false;	/* Indica si hay bichos rojos que suben	*/ 
+/* Name of the demon spelled with the gamepad (STATE 21): letters typed so far and the
+   cursor (0-25 letters, 26 = DEL, 27 = END): */ 
+static char demon_name_word[17]="";
+static int demon_name_cursor=0;
+
 bool room_demonroom=false,old_room_demonroom=false;	/* Indica si es la habitación de un monstruo. */ 
 int world5_room44_state=0,world5_room44_state2=0,world5_room44_state3=0;
 int world5_room64_state=0;
@@ -732,6 +737,17 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				Sound_play(S_F1);
 				currently_selecting=0;
 				STATE=5;
+				SUBSTATE=0;
+			} /* if */ 
+
+			/* Spell the demon's name with the gamepad (LB/RB, or TAB): */ 
+			if (keyboard[SDL_SCANCODE_TAB] && !old_keyboard[SDL_SCANCODE_TAB] &&
+				room_demonroom && fighting_demon==0 && map>=1 && next_world<=map &&
+				!pause && player_energy[character]>0 && to_enter_cut==0) {
+				Sound_play(S_select);
+				demon_name_word[0]=0;
+				demon_name_cursor=0;
+				STATE=21;
 				SUBSTATE=0;
 			} /* if */ 
 
@@ -2285,6 +2301,116 @@ void GameCycle(BYTE *screen,int dx,int dy)
 			OptionsCycle(screen,dx,dy,keyboard);
 			break;
 
+		case 21:
+			/* SPELLING THE DEMON'S NAME (for the gamepad; the keyboard can type it in the room): */ 
+			{
+				int i,l=strlen(demon_name_word);
+				bool done=false;
+				char tmp[2]={0,0};
+
+				memset(screen,0,dx*dy);
+				memset(col_buffer,0,dx*dy);
+				drawstats(screen,dx,dy);
+
+				tile_print("SAY THE NAME OF THE DEMON",GAME_VIEW_X+TILE_SIZE_X*4,GAME_VIEW_Y+TILE_SIZE_Y*2,screen,dx,dy);
+				tile_print(demon_name_word,GAME_VIEW_X+TILE_SIZE_X*(16-l/2),GAME_VIEW_Y+TILE_SIZE_Y*5,screen,dx,dy);
+				if (l<16 && ((cycle>>3)&1)==0)
+					B_rectangle(screen,GAME_VIEW_X+TILE_SIZE_X*(16-l/2+l)+2,GAME_VIEW_Y+TILE_SIZE_Y*6-3,
+								TILE_SIZE_X-4,2,dx,180);
+
+				for(i=0;i<26;i++) {
+					tmp[0]='A'+i;
+					tile_print(tmp,GAME_VIEW_X+TILE_SIZE_X*(3+2*(i%13)),GAME_VIEW_Y+TILE_SIZE_Y*(8+2*(i/13)),screen,dx,dy);
+				} /* for */ 
+				tile_print("DEL",GAME_VIEW_X+TILE_SIZE_X*9,GAME_VIEW_Y+TILE_SIZE_Y*13,screen,dx,dy);
+				tile_print("END",GAME_VIEW_X+TILE_SIZE_X*20,GAME_VIEW_Y+TILE_SIZE_Y*13,screen,dx,dy);
+				tile_print("A SELECT  B ERASE  LB:RB BACK",GAME_VIEW_X+TILE_SIZE_X*2,GAME_VIEW_Y+TILE_SIZE_Y*17,screen,dx,dy);
+
+				/* Cursor: */ 
+				if (demon_name_cursor<26) {
+					B_rectangle2(screen,GAME_VIEW_X+TILE_SIZE_X*(3+2*(demon_name_cursor%13))-1,
+								 GAME_VIEW_Y+TILE_SIZE_Y*(8+2*(demon_name_cursor/13))-1,
+								 TILE_SIZE_X,TILE_SIZE_Y,dx,180);
+				} else {
+					B_rectangle2(screen,GAME_VIEW_X+TILE_SIZE_X*(demon_name_cursor==26 ? 9:20)-1,
+								 GAME_VIEW_Y+TILE_SIZE_Y*13-1,TILE_SIZE_X*3,TILE_SIZE_Y,dx,180);
+				} /* if */ 
+
+				/* Move: two rows of 13 letters, then DEL and END: */ 
+				if (keyboard[SDL_SCANCODE_LEFT] && !old_keyboard[SDL_SCANCODE_LEFT]) {
+					if (demon_name_cursor>=26) demon_name_cursor=(demon_name_cursor==26 ? 27:26);
+					else if (demon_name_cursor%13==0) demon_name_cursor+=12;
+					else demon_name_cursor--;
+				} /* if */ 
+				if (keyboard[SDL_SCANCODE_RIGHT] && !old_keyboard[SDL_SCANCODE_RIGHT]) {
+					if (demon_name_cursor>=26) demon_name_cursor=(demon_name_cursor==26 ? 27:26);
+					else if (demon_name_cursor%13==12) demon_name_cursor-=12;
+					else demon_name_cursor++;
+				} /* if */ 
+				if (keyboard[SDL_SCANCODE_DOWN] && !old_keyboard[SDL_SCANCODE_DOWN]) {
+					if (demon_name_cursor<13) demon_name_cursor+=13;
+					else if (demon_name_cursor<26) demon_name_cursor=(demon_name_cursor%13<7 ? 26:27);
+					else demon_name_cursor=(demon_name_cursor==26 ? 3:9);
+				} /* if */ 
+				if (keyboard[SDL_SCANCODE_UP] && !old_keyboard[SDL_SCANCODE_UP]) {
+					if (demon_name_cursor>=26) demon_name_cursor=(demon_name_cursor==26 ? 16:22);
+					else if (demon_name_cursor>=13) demon_name_cursor-=13;
+					else demon_name_cursor=(demon_name_cursor<7 ? 26:27);
+				} /* if */ 
+
+				/* The keyboard's letters also work here (then RETURN says the name): */
+				for(i=0;i<26;i++) {
+					if (keyboard[SDL_SCANCODE_A+i] && !old_keyboard[SDL_SCANCODE_A+i] && l<16) {
+						demon_name_word[l++]=(char)('A'+i);
+						demon_name_word[l]=0;
+						demon_name_cursor=27;
+					} /* if */
+				} /* for */
+
+				if (keyboard[SDL_SCANCODE_RETURN] && !old_keyboard[SDL_SCANCODE_RETURN]) {
+					if (demon_name_cursor<26) {
+						if (l<16) {
+							demon_name_word[l++]=(char)('A'+demon_name_cursor);
+							demon_name_word[l]=0;
+							Sound_play(S_select);
+						} else {
+							Sound_play(S_nocoins);
+						} /* if */ 
+					} else if (demon_name_cursor==26) {
+						if (l>0) demon_name_word[--l]=0;
+					} else {
+						done=true;
+					} /* if */ 
+				} /* if */ 
+
+				if ((keyboard[SDL_SCANCODE_ESCAPE] && !old_keyboard[SDL_SCANCODE_ESCAPE]) ||
+					(keyboard[SDL_SCANCODE_BACKSPACE] && !old_keyboard[SDL_SCANCODE_BACKSPACE])) {
+					if (l>0) {
+						demon_name_word[--l]=0;
+					} else if (keyboard[SDL_SCANCODE_ESCAPE]) {
+						/* Nothing typed: back to the room without saying anything */
+						STATE=4;
+						SUBSTATE=1;
+					} /* if */
+				} /* if */ 
+
+				if (keyboard[SDL_SCANCODE_TAB] && !old_keyboard[SDL_SCANCODE_TAB]) {
+					STATE=4;
+					SUBSTATE=1;
+				} /* if */ 
+
+				if (done) {
+					/* Say it: the room checks the word as if it had been typed */ 
+					char word[17];
+					for(i=0;i<=l;i++) word[i]=(char)tolower(demon_name_word[i]);
+					clear_typed_word();
+					type_word(word);
+					STATE=4;
+					SUBSTATE=1;
+				} /* if */ 
+			}
+			break;
+
 		case 19:
 			/* MENU DE OPCIONES: */ 
 			{
@@ -2393,7 +2519,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 	case 10: case 15:
 		keyboard_set_context(KEYBOARD_CONTEXT_NONE);
 		break;
-	case 14:
+	case 14: case 21:
 		keyboard_set_context(KEYBOARD_CONTEXT_TEXT);
 		break;
 	case 19:

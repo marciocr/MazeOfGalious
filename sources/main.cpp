@@ -181,14 +181,14 @@ int main(int argc, char** argv)
 
 
 /* 9, 0 and D are shortcuts only when they aren't being typed (key
-   redefinition, password) or used as one of the game keys: */ 
+   redefinition, password, demon name) or used as one of the game keys: */ 
 static bool shortcut_key(SDL_Scancode k)
 {
 	extern int STATE;
 	extern SDL_Scancode UP_KEY, DOWN_KEY, LEFT_KEY, RIGHT_KEY;
 	extern SDL_Scancode SWORD_KEY, WEAPON_KEY, ITEM_KEY, PAUSE_KEY;
 
-	if (STATE == 10 || STATE == 14) return false;
+	if (STATE == 10 || STATE == 14 || STATE == 21) return false;
 
 	return k != UP_KEY && k != DOWN_KEY && k != LEFT_KEY && k != RIGHT_KEY &&
 		   k != SWORD_KEY && k != WEAPON_KEY && k != ITEM_KEY && k != PAUSE_KEY;

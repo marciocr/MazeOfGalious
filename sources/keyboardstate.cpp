@@ -11,7 +11,7 @@ extern SDL_Scancode SWORD_KEY,WEAPON_KEY,ITEM_KEY,PAUSE_KEY;
 /* Gamepad inputs, per slot: */
 enum {
 	PAD_LEFT, PAD_RIGHT, PAD_UP, PAD_DOWN,
-	PAD_A, PAD_B, PAD_X, PAD_Y, PAD_BACK, PAD_START,
+	PAD_A, PAD_B, PAD_X, PAD_Y, PAD_BACK, PAD_START, PAD_SHOULDER,
 	PAD_INPUTS
 };
 
@@ -84,6 +84,8 @@ static int pad_input(Uint8 button)
 	case SDL_GAMEPAD_BUTTON_NORTH: return PAD_Y;
 	case SDL_GAMEPAD_BUTTON_BACK: return PAD_BACK;
 	case SDL_GAMEPAD_BUTTON_START: return PAD_START;
+	case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER: return PAD_SHOULDER;
+	case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER: return PAD_SHOULDER;
 	} /* switch */
 
 	return -1;
@@ -145,6 +147,8 @@ static void read_gamepad(SDL_Gamepad *g,unsigned char *in)
 	in[PAD_Y]=SDL_GetGamepadButton(g,SDL_GAMEPAD_BUTTON_NORTH) ? 1:0;
 	in[PAD_BACK]=SDL_GetGamepadButton(g,SDL_GAMEPAD_BUTTON_BACK) ? 1:0;
 	in[PAD_START]=SDL_GetGamepadButton(g,SDL_GAMEPAD_BUTTON_START) ? 1:0;
+	in[PAD_SHOULDER]=(SDL_GetGamepadButton(g,SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) ||
+					  SDL_GetGamepadButton(g,SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)) ? 1:0;
 } /* read_gamepad */
 
 
@@ -200,6 +204,7 @@ void keyboard_update_gamepads(void)
 			keys[SDL_SCANCODE_DOWN]|=in[PAD_DOWN];
 			keys[SDL_SCANCODE_RETURN]|=in[PAD_A] | in[PAD_START];
 			keys[SDL_SCANCODE_ESCAPE]|=in[PAD_B] | in[PAD_BACK];
+			keys[SDL_SCANCODE_TAB]|=in[PAD_SHOULDER];
 		} else if (context==KEYBOARD_CONTEXT_GAME && i==gamepad_device) {
 			keys[LEFT_KEY]|=in[PAD_LEFT];
 			keys[RIGHT_KEY]|=in[PAD_RIGHT];
@@ -210,6 +215,7 @@ void keyboard_update_gamepads(void)
 			keys[ITEM_KEY]|=in[PAD_Y];
 			keys[PAUSE_KEY]|=in[PAD_START];
 			keys[SDL_SCANCODE_ESCAPE]|=in[PAD_BACK];
+			keys[SDL_SCANCODE_TAB]|=in[PAD_SHOULDER];
 		} /* if */
 	} /* for */
 	context_changed=false;
