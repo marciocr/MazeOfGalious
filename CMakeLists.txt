@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(MazeOfGalious)
 
-set(MOG_VERSION "0.7")
+set(MOG_VERSION "0.7.1")
 
 set(SHARED_SOURCES
 	sources/MOGtypes.h

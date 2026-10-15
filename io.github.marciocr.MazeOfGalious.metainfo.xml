@@ -24,6 +24,14 @@
     <content_attribute id="violence-fantasy">mild</content_attribute>
   </content_rating>
   <releases>
+    <release version="0.7.1" date="2026-10-15">
+      <description>
+        <ul>
+          <li>Gamepad players can now say a demon's name: LB/RB in the demon's room opens a letter picker (Tab on the keyboard)</li>
+          <li>Memory fixes found with AddressSanitizer (item screen in the castle, graphic set changes, demon fights)</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.7" date="2026-10-13">
       <description>
         <p>SDL3 port of the Maze of Galious remake v0.63, packaged for Linux.</p>
