@@ -9,7 +9,7 @@ class Bitmap {
 public:
 	Bitmap() {image=NULL;ancho=0,alto=0;};
 	Bitmap(char *nombre) {image=NULL;ancho=0,alto=0;B_loadpcx(nombre);};
-	~Bitmap() {delete image;};
+	~Bitmap() {delete[] image;};
 
 	bool B_loadpcx(char *nombre);
 

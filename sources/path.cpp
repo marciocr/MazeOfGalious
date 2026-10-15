@@ -62,7 +62,7 @@ void init_paths(void) {
 		for(j=0;j<i;j++) {
 		  g_paths[j]=tmp_g_paths[j];
 		} /* for */ 
-		delete tmp_g_paths;
+		delete[] tmp_g_paths;
 		g_paths[i]=new char[NAME_MAX];
 		sprintf(g_paths[i++],"graphics/%s/",direntry->d_name);
 	      } /* if */ 
@@ -113,7 +113,7 @@ void init_paths(void) {
 		for(j=0;j<i;j++) {
 		  s_paths[j]=tmp_s_paths[j];
 		} /* for */ 
-		delete tmp_s_paths;
+		delete[] tmp_s_paths;
 		s_paths[i]=new char[NAME_MAX];
 		sprintf(s_paths[i++],"sound/%s/",direntry->d_name);
 	      } /* if */ 

@@ -196,14 +196,14 @@ void ReleaseGraphics(void)
 {
 	int i;
 
-	delete col_buffer;
+	delete[] col_buffer;
 	col_buffer=0;
 
 	for(i=0;i<n_tiles;i++) {
 		delete tiles[i];
 		tiles[i]=0;
 	} /* for */ 
-	delete tiles;
+	delete[] tiles;
 
 	delete enemy_bmp;
 	enemy_bmp=0;
@@ -311,7 +311,7 @@ void GameEnd(void)
 	ReleaseGraphics();
 	ReleaseSound(true);
 
-	if (room_tiles!=NULL) delete room_tiles;
+	if (room_tiles!=NULL) delete[] room_tiles;
 } /* FinishGame */ 
 
 
@@ -1639,7 +1639,7 @@ bool loadroom(int map,int map_x,int map_y)
 	int n_smokes=0;
 
 	if (room_tiles!=NULL) {
-		delete room_tiles;
+		delete[] room_tiles;
 		room_tiles=NULL;
 	} /* if */ 
 
@@ -3017,11 +3017,13 @@ Bitmap *load_bitmap(char *name)
 	bmp=new Bitmap(tmp);
 
 	if (bmp->get_image()!=0) return bmp;
+	delete bmp;
 
 	sprintf(tmp,"%s%s",default_g_path,name);
 	bmp=new Bitmap(tmp);
 
 	if (bmp->get_image()!=0) return bmp;
+	delete bmp;
 
 	fprintf(stderr,"ERROR: file %s not found.\n",name);
 

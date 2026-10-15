@@ -838,7 +838,7 @@ void GameCycle(BYTE *screen,int dx,int dy)
 				} /* for */ 
 			} /* if */ 
 
-			if (world_item[map-1][3]) {
+			if (map>=1 && world_item[map-1][3]) {
 				/* Dibujar mapa: */ 
 				tile_print("MAP",6*TILE_SIZE_X+GAME_VIEW_X,GAME_VIEW_Y+13*TILE_SIZE_Y,screen,dx,dy);
 				draw_items_map(map,map_x,map_y,(((SUBSTATE>>2)&0x01)==0 ? true:false),screen,dx,dy);
