@@ -199,7 +199,8 @@ void ReleaseGraphics(void)
 	delete[] col_buffer;
 	col_buffer=0;
 
-	for(i=0;i<n_tiles;i++) {
+	/* All the slots, not just n_tiles: the demon's tiles go after them (demon_tile): */ 
+	for(i=0;tiles!=0 && i<MAX_TILES;i++) {
 		delete tiles[i];
 		tiles[i]=0;
 	} /* for */ 
